@@ -30,6 +30,7 @@ The `-s` option selects the sort field. Available values are:
 
 When running the ncurses interface you can press `F3` or `>` to cycle to
 the next sort field and `<` to go back.
+Press `F4` or `o` to toggle between ascending and descending order.
 
 Additional shortcuts:
 
@@ -39,6 +40,7 @@ Additional shortcuts:
 - Use `+` and `-` to increase or decrease the refresh delay while running.
 - Press `c` to toggle per-core CPU usage display.
 - Press `a` to toggle between the short command name and the full command line.
+- Press `F4` or `o` to change the sort direction.
 - Press `space` to pause or resume updates.
 - Press `h` to open a small help window with available shortcuts.
 

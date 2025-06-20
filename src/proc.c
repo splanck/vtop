@@ -28,6 +28,11 @@ static size_t core_count;
 /* optional filters */
 static char name_filter[256] = "";
 static char user_filter[32] = "";
+/* sort order: 0 = ascending, 1 = descending */
+static int sort_descending;
+
+void set_sort_descending(int desc) { sort_descending = desc != 0; }
+int get_sort_descending(void) { return sort_descending; }
 
 void set_name_filter(const char *substr) {
     if (substr && *substr) {
@@ -425,25 +430,34 @@ int read_misc_stats(struct misc_stats *stats) {
 int cmp_proc_pid(const void *a, const void *b) {
     const struct process_info *pa = a;
     const struct process_info *pb = b;
-    return pa->pid - pb->pid;
+    int diff = pa->pid - pb->pid;
+    if (diff == 0)
+        return 0;
+    return sort_descending ? -diff : diff;
 }
 
 int cmp_proc_cpu(const void *a, const void *b) {
     const struct process_info *pa = a;
     const struct process_info *pb = b;
+    int res = 0;
     if (pa->cpu_usage < pb->cpu_usage)
-        return 1;
-    if (pa->cpu_usage > pb->cpu_usage)
-        return -1;
-    return 0;
+        res = -1;
+    else if (pa->cpu_usage > pb->cpu_usage)
+        res = 1;
+    if (sort_descending)
+        res = -res;
+    return res;
 }
 
 int cmp_proc_mem(const void *a, const void *b) {
     const struct process_info *pa = a;
     const struct process_info *pb = b;
+    int res = 0;
     if (pa->rss < pb->rss)
-        return 1;
-    if (pa->rss > pb->rss)
-        return -1;
-    return 0;
+        res = -1;
+    else if (pa->rss > pb->rss)
+        res = 1;
+    if (sort_descending)
+        res = -res;
+    return res;
 }
