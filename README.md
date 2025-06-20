@@ -37,6 +37,7 @@ Additional shortcuts:
 - Press `r` to change a process's nice value. You will be asked for the
   PID and the new nice level.
 - Use `+` and `-` to increase or decrease the refresh delay while running.
+- Press `c` to toggle per-core CPU usage display.
 - Press `h` to open a small help window with available shortcuts.
 
 These controls operate on live processes. Ensure you have permission to

@@ -15,11 +15,17 @@
 static unsigned long long prev_total;
 static unsigned long long prev_idle;
 
+static double *core_usage;
+static unsigned long long *core_prev_total;
+static unsigned long long *core_prev_idle;
+static size_t core_count;
+static int show_cores;
+
 static enum sort_field current_sort;
 static int (*compare_procs)(const void *, const void *) = cmp_proc_pid;
 
 static void show_help(void) {
-    const int h = 12;
+    const int h = 13;
     const int w = 48;
     WINDOW *win = newwin(h, w, (LINES - h) / 2, (COLS - w) / 2);
     box(win, 0, 0);
@@ -31,7 +37,8 @@ static void show_help(void) {
     mvwprintw(win, 7, 2, "u       Filter by user");
     mvwprintw(win, 8, 2, "k       Kill a process");
     mvwprintw(win, 9, 2, "r       Renice a process");
-    mvwprintw(win, 10, 2, "h       Show this help");
+    mvwprintw(win, 10, 2, "c       Toggle per-core view");
+    mvwprintw(win, 11, 2, "h       Show this help");
     mvwprintw(win, h - 2, 2, "Press any key to return");
     wrefresh(win);
     nodelay(stdscr, FALSE);
@@ -88,6 +95,34 @@ int run_ui(unsigned int delay_ms, enum sort_field sort) {
                 cpu_usage = 100.0 * (double)(d_total - d_idle) / (double)d_total;
             prev_total = total;
             prev_idle = idle;
+
+            size_t n = get_cpu_core_count();
+            const struct cpu_core_stats *cores = get_cpu_core_stats();
+            if (n != core_count) {
+                free(core_usage);
+                free(core_prev_total);
+                free(core_prev_idle);
+                core_usage = calloc(n, sizeof(double));
+                core_prev_total = calloc(n, sizeof(unsigned long long));
+                core_prev_idle = calloc(n, sizeof(unsigned long long));
+                core_count = n;
+            }
+            for (size_t i = 0; i < n; i++) {
+                unsigned long long cidle = cores[i].idle + cores[i].iowait;
+                unsigned long long ctotal = cores[i].user + cores[i].nice +
+                                            cores[i].system + cores[i].irq +
+                                            cores[i].softirq + cores[i].steal +
+                                            cidle;
+                unsigned long long cd_total = ctotal - core_prev_total[i];
+                unsigned long long cd_idle = cidle - core_prev_idle[i];
+                double usage = 0.0;
+                if (cd_total > 0)
+                    usage = 100.0 * (double)(cd_total - cd_idle) /
+                            (double)cd_total;
+                core_usage[i] = usage;
+                core_prev_total[i] = ctotal;
+                core_prev_idle[i] = cidle;
+            }
         }
         if (read_mem_stats(&ms) == 0 && ms.total > 0) {
             unsigned long long used = ms.total - ms.available;
@@ -120,10 +155,24 @@ int run_ui(unsigned int delay_ms, enum sort_field sort) {
                  misc.running_tasks, misc.total_tasks, cpu_usage, mem_usage,
                  ms.swap_used, ms.swap_total, swap_usage,
                  interval / 1000.0, fbuf);
-        mvprintw(1, 0, "%s",
+        int row = 1;
+        if (show_cores && core_count > 0) {
+            char cbuf[256] = "";
+            for (size_t i = 0; i < core_count; i++) {
+                char seg[32];
+                snprintf(seg, sizeof(seg), "cpu%zu %5.1f%% ", i, core_usage[i]);
+                if (strlen(cbuf) + strlen(seg) < sizeof(cbuf))
+                    strcat(cbuf, seg);
+                else
+                    break;
+            }
+            mvprintw(1, 0, "%s", cbuf);
+            row = 2;
+        }
+        mvprintw(row, 0, "%s",
                  "PID      USER     NAME                     STATE  VSIZE    RSS  RSS%  CPU%   TIME     START");
-        for (size_t i = 0; i < count && i < LINES - 3; i++) {
-            mvprintw(i + 2, 0,
+        for (size_t i = 0; i < count && i < LINES - row - 2; i++) {
+            mvprintw(i + row + 1, 0,
                      "%-8d %-8s %-25s %c %8llu %5ld %6.2f %6.2f %8.0f %-8s",
                      procs[i].pid, procs[i].user, procs[i].name, procs[i].state,
                      procs[i].vsize, procs[i].rss,
@@ -199,11 +248,16 @@ int run_ui(unsigned int delay_ms, enum sort_field sort) {
             noecho();
             curs_set(0);
             nodelay(stdscr, TRUE);
+        } else if (ch == 'c') {
+            show_cores = !show_cores;
         } else if (ch == 'h') {
             show_help();
         }
     }
     endwin();
+    free(core_usage);
+    free(core_prev_total);
+    free(core_prev_idle);
     return 0;
 }
 #endif /* WITH_UI */

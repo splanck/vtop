@@ -5,10 +5,11 @@ filesystem. It does not rely on external libraries so it can be
 compiled on any Linux system with a standard C compiler.
 
 ## CPU Statistics
-`read_cpu_stats()` opens `/proc/stat` and parses the first line which
-contains cumulative CPU times. Fields are read using `sscanf` in the
-order defined by the kernel: user, nice, system, idle, iowait, irq,
-softirq and steal.
+`read_cpu_stats()` opens `/proc/stat` and parses both the aggregate
+`cpu` line and any `cpu0`, `cpu1`, ... entries. Each line provides
+cumulative times for user, nice, system, idle, iowait, irq, softirq and
+steal cycles. The per-core values are stored in an array that can be
+queried by the UI.
 
 ## Memory Statistics
 `read_mem_stats()` looks for specific keys in `/proc/meminfo` such as
@@ -70,6 +71,7 @@ Process management shortcuts are also available:
 
 - `k` &ndash; prompt for a PID and send `SIGTERM` to that process.
 - `r` &ndash; prompt for a PID and new nice value to adjust process priority.
+- `c` &ndash; toggle per-core CPU usage display.
 - `h` &ndash; display a help window showing available shortcuts.
 
 Use caution when running with elevated privileges because killing or
