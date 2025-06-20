@@ -70,6 +70,7 @@ Process management shortcuts are also available:
 
 - `k` &ndash; prompt for a PID and send `SIGTERM` to that process.
 - `r` &ndash; prompt for a PID and new nice value to adjust process priority.
+- `h` &ndash; display a help window showing available shortcuts.
 
 Use caution when running with elevated privileges because killing or
 renicing critical processes can destabilize the system.
