@@ -9,6 +9,8 @@
 #include <signal.h>
 
 #define MAX_PROC 256
+#define MIN_DELAY_MS 100
+#define MAX_DELAY_MS 10000
 
 static unsigned long long prev_total;
 static unsigned long long prev_idle;
@@ -46,6 +48,11 @@ int run_ui(unsigned int delay_ms, enum sort_field sort) {
     double mem_usage = 0.0;
 
     set_sort(sort);
+    unsigned int interval = delay_ms;
+    if (interval < MIN_DELAY_MS)
+        interval = MIN_DELAY_MS;
+    if (interval > MAX_DELAY_MS)
+        interval = MAX_DELAY_MS;
     int ch = 0;
     while (ch != 'q') {
         if (read_cpu_stats(&cs) == 0) {
@@ -69,9 +76,10 @@ int run_ui(unsigned int delay_ms, enum sort_field sort) {
         qsort(procs, count, sizeof(struct process_info), compare_procs);
         erase();
         mvprintw(0, 0,
-                 "load %.2f %.2f %.2f  up %.0fs  tasks %d/%d  cpu %5.1f%%  mem %5.1f%%",
+                 "load %.2f %.2f %.2f  up %.0fs  tasks %d/%d  cpu %5.1f%%  mem %5.1f%%  intv %.1fs",
                  misc.load1, misc.load5, misc.load15, misc.uptime,
-                 misc.running_tasks, misc.total_tasks, cpu_usage, mem_usage);
+                 misc.running_tasks, misc.total_tasks, cpu_usage, mem_usage,
+                 interval / 1000.0);
         mvprintw(1, 0, "%s",
                  "PID      USER     NAME                     STATE  VSIZE    RSS  RSS%  CPU%");
         for (size_t i = 0; i < count && i < LINES - 3; i++) {
@@ -81,7 +89,7 @@ int run_ui(unsigned int delay_ms, enum sort_field sort) {
                      procs[i].rss_percent, procs[i].cpu_usage);
         }
         refresh();
-        usleep(delay_ms * 1000);
+        usleep(interval * 1000);
         ch = getch();
         if (ch == KEY_F(3) || ch == '>') {
             if (current_sort == SORT_MEM)
@@ -93,6 +101,12 @@ int run_ui(unsigned int delay_ms, enum sort_field sort) {
                 set_sort(SORT_MEM);
             else
                 set_sort(current_sort - 1);
+        } else if (ch == '+') {
+            if (interval + 100 <= MAX_DELAY_MS)
+                interval += 100;
+        } else if (ch == '-') {
+            if (interval > MIN_DELAY_MS)
+                interval -= 100;
         } else if (ch == 'k') {
             char buf[16];
             nodelay(stdscr, FALSE);

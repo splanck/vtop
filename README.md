@@ -17,6 +17,11 @@ that prints the version number.
 
 ## Usage
 
+The `-d`/`--delay` option sets how often the display refreshes. The
+interval is specified in seconds. The default is `3` seconds and the
+valid range is `0.1`&ndash;`10` seconds. During interactive use you can
+press `+` or `-` to adjust the delay in 0.1&nbsp;s steps.
+
 The `-s` option selects the sort field. Available values are:
 
 - `pid` &ndash; sort by process ID
@@ -31,6 +36,7 @@ Additional shortcuts:
 - Press `k` to send `SIGTERM` to a process. vtop will prompt for the PID.
 - Press `r` to change a process's nice value. You will be asked for the
   PID and the new nice level.
+- Use `+` and `-` to increase or decrease the refresh delay while running.
 
 These controls operate on live processes. Ensure you have permission to
 signal or renice the target process. Running as root can terminate or slow
