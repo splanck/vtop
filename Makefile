@@ -1,13 +1,18 @@
 CC := gcc
 CFLAGS := -Wall -O2 -Iinclude
-
 SRC := src/main.c src/proc.c
 BIN := vtop
+
+ifdef WITH_UI
+CFLAGS += -DWITH_UI
+SRC += src/ui.c
+LDLIBS += -lncurses
+endif
 
 all: $(BIN)
 
 $(BIN): $(SRC)
-	$(CC) $(CFLAGS) $(SRC) -o $@
+	$(CC) $(CFLAGS) $(SRC) $(LDLIBS) -o $@
 
 run: $(BIN)
 	./$(BIN)
