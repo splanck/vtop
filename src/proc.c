@@ -278,15 +278,16 @@ size_t list_processes(struct process_info *buf, size_t max) {
             continue;
         char line[1024];
         if (fgets(line, sizeof(line), fp)) {
-            /* pid (comm) state ... utime stime ... starttime vsize rss */
+            /* pid (comm) state ... utime stime ... priority nice ... starttime vsize rss */
             char comm[256];
             char state;
             unsigned long long utime, stime, starttime;
+            long priority, niceval;
             unsigned long long vsize;
             long rss;
             sscanf(line,
-                   "%*d (%255[^)]) %c %*s %*s %*s %*s %*s %*s %*s %*s %*s %*s %llu %llu %*s %*s %*s %*s %*s %*s %llu %llu %ld",
-                   comm, &state, &utime, &stime, &starttime, &vsize, &rss);
+                   "%*d (%255[^)]) %c %*s %*s %*s %*s %*s %*s %*s %*s %*s %*s %llu %llu %*s %*s %ld %ld %*s %*s %llu %llu %ld",
+                   comm, &state, &utime, &stime, &priority, &niceval, &starttime, &vsize, &rss);
 
             unsigned int uid = 0;
             snprintf(path, sizeof(path), "/proc/%ld/status", pid);
@@ -340,6 +341,8 @@ size_t list_processes(struct process_info *buf, size_t max) {
             }
 
             buf[count].state = state;
+            buf[count].priority = priority;
+            buf[count].nice = niceval;
             buf[count].vsize = vsize;
             buf[count].rss = rss;
             buf[count].rss_percent = 100.0 * (double)rss * (double)page_kb /

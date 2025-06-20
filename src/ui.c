@@ -171,11 +171,12 @@ int run_ui(unsigned int delay_ms, enum sort_field sort) {
             row = 2;
         }
         mvprintw(row, 0, "%s",
-                 "PID      USER     NAME                     STATE  VSIZE    RSS  RSS%  CPU%   TIME     START");
+                 "PID      USER     NAME                     STATE PRI  NICE  VSIZE    RSS  RSS%  CPU%   TIME     START");
         for (size_t i = 0; i < count && i < LINES - row - 2; i++) {
             mvprintw(i + row + 1, 0,
-                     "%-8d %-8s %-25s %c %8llu %5ld %6.2f %6.2f %8.0f %-8s",
+                     "%-8d %-8s %-25s %c %4ld %5ld %8llu %5ld %6.2f %6.2f %8.0f %-8s",
                      procs[i].pid, procs[i].user, procs[i].name, procs[i].state,
+                     procs[i].priority, procs[i].nice,
                      procs[i].vsize, procs[i].rss,
                      procs[i].rss_percent, procs[i].cpu_usage,
                      procs[i].cpu_time, procs[i].start_time);

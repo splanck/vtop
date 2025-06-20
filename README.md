@@ -46,6 +46,11 @@ critical system tasks, so use with care.
 
 Example output with the ncurses interface:
 
+The table shows PID, USER, process name, state, priority,
+nice value, virtual memory size, resident set size, memory
+usage percentage, CPU usage, total CPU time and the process
+start time.
+
 ```text
 $ vtop
 load 0.00 0.01 0.05  up 1234s  tasks 1/87  cpu 2.0%  mem 27.3%
