@@ -51,10 +51,19 @@ Additional shortcuts:
 - Press `F4` or `o` to change the sort direction.
 - Press `space` to pause or resume updates.
 - Press `h` to open a small help window with available shortcuts.
+- Press `W` to save the current configuration.
 
 These controls operate on live processes. Ensure you have permission to
 signal or renice the target process. Running as root can terminate or slow
 critical system tasks, so use with care.
+
+## Configuration
+
+When the ncurses interface exits it writes the current options to
+`~/.vtoprc`. This file stores the refresh interval, sort column and the
+enabled columns. On the next launch, vtop reads this file to restore the
+previous settings. You can also press `W` at any time to save the
+configuration manually.
 
 Example output with the ncurses interface:
 

@@ -3,6 +3,7 @@
 #include "control.h"
 #ifdef WITH_UI
 #include <ncurses.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
@@ -71,6 +72,96 @@ static struct column_def columns[COL_COUNT] = {
     {COL_TIME,  "TIME",    8, 0, 1},
     {COL_START, "START",   8, 1, 1}
 };
+
+/* configuration file helpers */
+static const char *get_config_path(void) {
+    const char *home = getenv("HOME");
+    if (!home)
+        home = ".";
+    static char path[512];
+    snprintf(path, sizeof(path), "%s/.vtoprc", home);
+    return path;
+}
+
+int ui_load_config(unsigned int *delay_ms, enum sort_field *sort) {
+    const char *path = get_config_path();
+    FILE *fp = fopen(path, "r");
+    if (!fp)
+        return -1;
+    char line[256];
+    while (fgets(line, sizeof(line), fp)) {
+        char *nl = strchr(line, '\n');
+        if (nl)
+            *nl = '\0';
+        if (line[0] == '#' || line[0] == '\0')
+            continue;
+        char *eq = strchr(line, '=');
+        if (!eq)
+            continue;
+        *eq = '\0';
+        char *key = line;
+        char *val = eq + 1;
+        if (strcmp(key, "interval_ms") == 0) {
+            if (delay_ms)
+                *delay_ms = (unsigned int)strtoul(val, NULL, 10);
+        } else if (strcmp(key, "sort") == 0) {
+            if (sort) {
+                if (strcmp(val, "cpu") == 0)
+                    *sort = SORT_CPU;
+                else if (strcmp(val, "mem") == 0)
+                    *sort = SORT_MEM;
+                else
+                    *sort = SORT_PID;
+            }
+        } else if (strcmp(key, "show_cores") == 0) {
+            show_cores = atoi(val);
+        } else if (strcmp(key, "show_full_cmd") == 0) {
+            show_full_cmd = atoi(val);
+        } else if (strcmp(key, "show_threads") == 0) {
+            show_threads = atoi(val);
+        } else if (strcmp(key, "show_idle") == 0) {
+            show_idle = atoi(val);
+        } else if (strcmp(key, "color_enabled") == 0) {
+            color_enabled = atoi(val);
+        } else if (strcmp(key, "columns") == 0) {
+            char *tok = strtok(val, ",");
+            for (int i = 0; i < COL_COUNT && tok; i++) {
+                columns[i].enabled = atoi(tok);
+                tok = strtok(NULL, ",");
+            }
+        }
+    }
+    fclose(fp);
+    return 0;
+}
+
+int ui_save_config(unsigned int delay_ms, enum sort_field sort) {
+    const char *path = get_config_path();
+    FILE *fp = fopen(path, "w");
+    if (!fp)
+        return -1;
+    fprintf(fp, "interval_ms=%u\n", delay_ms);
+    const char *s = "pid";
+    if (sort == SORT_CPU)
+        s = "cpu";
+    else if (sort == SORT_MEM)
+        s = "mem";
+    fprintf(fp, "sort=%s\n", s);
+    fprintf(fp, "show_cores=%d\n", show_cores);
+    fprintf(fp, "show_full_cmd=%d\n", show_full_cmd);
+    fprintf(fp, "show_threads=%d\n", show_threads);
+    fprintf(fp, "show_idle=%d\n", show_idle);
+    fprintf(fp, "color_enabled=%d\n", color_enabled);
+    fprintf(fp, "columns=");
+    for (int i = 0; i < COL_COUNT; i++) {
+        fprintf(fp, "%d", columns[i].enabled);
+        if (i < COL_COUNT - 1)
+            fputc(',', fp);
+    }
+    fputc('\n', fp);
+    fclose(fp);
+    return 0;
+}
 
 static int column_visible(int idx) {
     if (columns[idx].id == COL_TID && !show_threads)
@@ -219,7 +310,7 @@ static void field_manager(void) {
 }
 
 static void show_help(void) {
-    const int h = 21;
+    const int h = 22;
     const int w = 52;
     WINDOW *win = newwin(h, w, (LINES - h) / 2, (COLS - w) / 2);
     box(win, 0, 0);
@@ -238,8 +329,9 @@ static void show_help(void) {
     mvwprintw(win, 14, 2, "i       Toggle idle processes");
     mvwprintw(win, 15, 2, "z       Toggle colors");
     mvwprintw(win, 16, 2, "f       Field manager");
-    mvwprintw(win, 17, 2, "SPACE    Pause/resume");
-    mvwprintw(win, 18, 2, "h       Show this help");
+    mvwprintw(win, 17, 2, "W       Save config");
+    mvwprintw(win, 18, 2, "SPACE    Pause/resume");
+    mvwprintw(win, 19, 2, "h       Show this help");
     mvwprintw(win, h - 2, 2, "Press any key to return");
     wrefresh(win);
     nodelay(stdscr, FALSE);
@@ -479,6 +571,8 @@ int run_ui(unsigned int delay_ms, enum sort_field sort,
             color_enabled = !color_enabled;
             if (!color_enabled)
                 attrset(A_NORMAL);
+        } else if (ch == 'W') {
+            ui_save_config(interval, current_sort);
         } else if (ch == 'f') {
             field_manager();
         } else if (ch == ' ') {
@@ -491,6 +585,7 @@ int run_ui(unsigned int delay_ms, enum sort_field sort,
     free(core_usage);
     free(core_prev_total);
     free(core_prev_idle);
+    ui_save_config(interval, current_sort);
     return 0;
 }
 #endif /* WITH_UI */

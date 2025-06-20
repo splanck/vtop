@@ -79,6 +79,10 @@ int main(int argc, char *argv[]) {
     unsigned int delay_ms = 3000; /* default 3 seconds */
     enum sort_field sort = SORT_PID;
 
+#ifdef WITH_UI
+    ui_load_config(&delay_ms, &sort);
+#endif
+
     static struct option long_opts[] = {
         {"delay", required_argument, NULL, 'd'},
         {"sort", required_argument, NULL, 's'},
