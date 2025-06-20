@@ -1,6 +1,8 @@
 #ifndef UI_H
 #define UI_H
 
+#include <stddef.h>
+
 enum sort_field {
     SORT_PID,
     SORT_CPU,
@@ -10,7 +12,7 @@ enum sort_field {
 };
 
 int run_ui(unsigned int delay_ms, enum sort_field sort,
-           unsigned int iterations, int columns);
+           unsigned int iterations, int columns, size_t max_entries);
 
 enum mem_unit {
     MEM_UNIT_K,

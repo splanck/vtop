@@ -344,7 +344,7 @@ static void field_manager(void) {
 }
 
 static void show_help(void) {
-    const int h = 25;
+    const int h = 26;
     const int w = 52;
     int startx = COLS > w ? (COLS - w) / 2 : 0;
     if (startx < 0)
@@ -373,9 +373,10 @@ static void show_help(void) {
     mvwprintw(win, 18, 2, "V       Toggle process tree");
     mvwprintw(win, 19, 2, "z       Toggle colors");
     mvwprintw(win, 20, 2, "f       Field manager");
-    mvwprintw(win, 21, 2, "W       Save config");
-    mvwprintw(win, 22, 2, "SPACE    Pause/resume");
-    mvwprintw(win, 23, 2, "h       Show this help");
+    mvwprintw(win, 21, 2, "n       Set entry limit");
+    mvwprintw(win, 22, 2, "W       Save config");
+    mvwprintw(win, 23, 2, "SPACE    Pause/resume");
+    mvwprintw(win, 24, 2, "h       Show this help");
     mvwprintw(win, h - 2, 2, "Press any key to return");
     wrefresh(win);
     nodelay(stdscr, FALSE);
@@ -452,8 +453,11 @@ static void build_forest(struct process_info *procs, size_t count) {
     free(used);
 }
 
+static size_t max_entries;
+
 int run_ui(unsigned int delay_ms, enum sort_field sort,
-           unsigned int iterations, int columns) {
+           unsigned int iterations, int columns, size_t max_entries_arg) {
+    max_entries = max_entries_arg;
     initscr();
     if (columns > 0)
         resizeterm(LINES, columns);
@@ -544,6 +548,8 @@ int run_ui(unsigned int delay_ms, enum sort_field sort,
 
         if (!paused) {
             size_t need = count_processes();
+            if (max_entries && need > max_entries)
+                need = max_entries;
             if (need > proc_cap) {
                 struct process_info *tmp = realloc(procs, need * sizeof(*procs));
                 if (tmp) {
@@ -552,6 +558,8 @@ int run_ui(unsigned int delay_ms, enum sort_field sort,
                 }
             }
             count = list_processes(procs, proc_cap);
+            if (max_entries && count > max_entries)
+                count = max_entries;
         }
         if (show_forest) {
             qsort(procs, count, sizeof(struct process_info), cmp_proc_pid);
@@ -726,6 +734,17 @@ int run_ui(unsigned int delay_ms, enum sort_field sort,
             color_enabled = !color_enabled;
             if (!color_enabled)
                 attrset(A_NORMAL);
+        } else if (ch == 'n') {
+            char buf[16];
+            nodelay(stdscr, FALSE);
+            echo();
+            curs_set(1);
+            mvprintw(LINES - 1, 0, "Max entries (0=all): ");
+            getnstr(buf, sizeof(buf) - 1);
+            max_entries = (size_t)strtoul(buf, NULL, 10);
+            noecho();
+            curs_set(0);
+            nodelay(stdscr, TRUE);
         } else if (ch == 'W') {
             ui_save_config(interval, current_sort);
         } else if (ch == 'f') {
