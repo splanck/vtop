@@ -150,10 +150,11 @@ int run_ui(unsigned int delay_ms, enum sort_field sort) {
             strncat(fbuf, uf, sizeof(fbuf) - strlen(fbuf) - 1);
         }
         mvprintw(0, 0,
-                 "load %.2f %.2f %.2f  up %.0fs  tasks %d/%d  cpu %5.1f%%  mem %5.1f%%  swap %llu/%llu %.1f%%  intv %.1fs%s",
+                 "load %.2f %.2f %.2f  up %.0fs  tasks %d/%d  cpu %5.1f%% us %.1f%% sy %.1f%% id %.1f%%  mem %5.1f%%  swap %llu/%llu %.1f%%  intv %.1fs%s",
                  misc.load1, misc.load5, misc.load15, misc.uptime,
-                 misc.running_tasks, misc.total_tasks, cpu_usage, mem_usage,
-                 ms.swap_used, ms.swap_total, swap_usage,
+                 misc.running_tasks, misc.total_tasks, cpu_usage,
+                 cs.user_percent, cs.system_percent, cs.idle_percent,
+                 mem_usage, ms.swap_used, ms.swap_total, swap_usage,
                  interval / 1000.0, fbuf);
         int row = 1;
         if (show_cores && core_count > 0) {

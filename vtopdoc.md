@@ -11,6 +11,16 @@ cumulative times for user, nice, system, idle, iowait, irq, softirq and
 steal cycles. The per-core values are stored in an array that can be
 queried by the UI.
 
+The **user** field represents time running processes in user space
+(including "nice" time). **System** accounts for time spent executing
+kernel code, servicing interrupts and the "steal" time taken by a
+hypervisor. **Idle** covers idle loops and I/O wait time when the CPU is
+not executing tasks.
+
+`read_cpu_stats()` also calculates the percentage of time spent in each
+of these states since the previous call. These percentages are displayed
+in the UI header next to the overall CPU usage.
+
 ## Memory Statistics
 `read_mem_stats()` looks for specific keys in `/proc/meminfo` such as
 `MemTotal`, `MemFree` and `MemAvailable`. Values are read line by line
