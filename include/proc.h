@@ -57,6 +57,8 @@ struct process_info {
     int pid;
     /* Thread ID (equals pid when not showing threads) */
     int tid;
+    /* Parent process ID */
+    int ppid;
     /* Numeric user ID of the process */
     unsigned int uid;
     /* Short username resolved from uid */
@@ -80,6 +82,8 @@ struct process_info {
     double cpu_time;
     /* Process start time as HH:MM:SS */
     char start_time[16];
+    /* Nesting level for forest view */
+    int level;
 };
 
 int read_cpu_stats(struct cpu_stats *stats);
