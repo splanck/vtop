@@ -59,6 +59,12 @@ int read_mem_stats(struct mem_stats *stats);
 size_t list_processes(struct process_info *buf, size_t max);
 int read_misc_stats(struct misc_stats *stats);
 
+/* optional filtering */
+void set_name_filter(const char *substr);
+void set_user_filter(const char *user);
+const char *get_name_filter(void);
+const char *get_user_filter(void);
+
 /* comparison helpers for sorting */
 int cmp_proc_pid(const void *a, const void *b);
 int cmp_proc_cpu(const void *a, const void *b);

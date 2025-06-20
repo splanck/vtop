@@ -6,6 +6,7 @@
 #include <unistd.h>
 #include <pwd.h>
 #include <time.h>
+#include <ctype.h>
 
 /* store previous per-process CPU times between calls */
 #define MAX_PREV 1024
@@ -19,6 +20,53 @@ static size_t prev_count;
 
 /* previous total CPU time for usage calculation */
 static unsigned long long last_total_cpu;
+
+/* optional filters */
+static char name_filter[256] = "";
+static char user_filter[32] = "";
+
+void set_name_filter(const char *substr) {
+    if (substr && *substr) {
+        strncpy(name_filter, substr, sizeof(name_filter) - 1);
+        name_filter[sizeof(name_filter) - 1] = '\0';
+    } else {
+        name_filter[0] = '\0';
+    }
+}
+
+void set_user_filter(const char *user) {
+    if (user && *user) {
+        strncpy(user_filter, user, sizeof(user_filter) - 1);
+        user_filter[sizeof(user_filter) - 1] = '\0';
+    } else {
+        user_filter[0] = '\0';
+    }
+}
+
+const char *get_name_filter(void) { return name_filter; }
+const char *get_user_filter(void) { return user_filter; }
+
+static int match_filter(const char *name, const char *user) {
+    if (user_filter[0] && strcmp(user_filter, user) != 0)
+        return 0;
+    if (name_filter[0]) {
+        /* simple case-insensitive substring search */
+        const char *h = name;
+        const char *n = name_filter;
+        size_t nlen = strlen(n);
+        for (; *h; h++) {
+            size_t i = 0;
+            while (i < nlen && h[i] &&
+                   tolower((unsigned char)h[i]) ==
+                       tolower((unsigned char)n[i]))
+                i++;
+            if (i == nlen)
+                return 1;
+        }
+        return 0;
+    }
+    return 1;
+}
 
 int read_cpu_stats(struct cpu_stats *stats) {
     FILE *fp = fopen("/proc/stat", "r");
@@ -185,6 +233,12 @@ size_t list_processes(struct process_info *buf, size_t max) {
             }
             strncpy(buf[count].name, comm, sizeof(buf[count].name) - 1);
             buf[count].name[sizeof(buf[count].name) - 1] = '\0';
+
+            if (!match_filter(buf[count].name, buf[count].user)) {
+                fclose(fp);
+                continue;
+            }
+
             buf[count].state = state;
             buf[count].vsize = vsize;
             buf[count].rss = rss;

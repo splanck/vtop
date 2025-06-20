@@ -75,11 +75,22 @@ int run_ui(unsigned int delay_ms, enum sort_field sort) {
         size_t count = list_processes(procs, MAX_PROC);
         qsort(procs, count, sizeof(struct process_info), compare_procs);
         erase();
+        char fbuf[128] = "";
+        const char *nf = get_name_filter();
+        const char *uf = get_user_filter();
+        if (nf[0]) {
+            strncat(fbuf, " cmd=", sizeof(fbuf) - strlen(fbuf) - 1);
+            strncat(fbuf, nf, sizeof(fbuf) - strlen(fbuf) - 1);
+        }
+        if (uf[0]) {
+            strncat(fbuf, " user=", sizeof(fbuf) - strlen(fbuf) - 1);
+            strncat(fbuf, uf, sizeof(fbuf) - strlen(fbuf) - 1);
+        }
         mvprintw(0, 0,
-                 "load %.2f %.2f %.2f  up %.0fs  tasks %d/%d  cpu %5.1f%%  mem %5.1f%%  intv %.1fs",
+                 "load %.2f %.2f %.2f  up %.0fs  tasks %d/%d  cpu %5.1f%%  mem %5.1f%%  intv %.1fs%s",
                  misc.load1, misc.load5, misc.load15, misc.uptime,
                  misc.running_tasks, misc.total_tasks, cpu_usage, mem_usage,
-                 interval / 1000.0);
+                 interval / 1000.0, fbuf);
         mvprintw(1, 0, "%s",
                  "PID      USER     NAME                     STATE  VSIZE    RSS  RSS%  CPU%   TIME     START");
         for (size_t i = 0; i < count && i < LINES - 3; i++) {
@@ -109,6 +120,28 @@ int run_ui(unsigned int delay_ms, enum sort_field sort) {
         } else if (ch == '-') {
             if (interval > MIN_DELAY_MS)
                 interval -= 100;
+        } else if (ch == '/') {
+            char buf[64];
+            nodelay(stdscr, FALSE);
+            echo();
+            curs_set(1);
+            mvprintw(LINES - 1, 0, "Command filter: ");
+            getnstr(buf, sizeof(buf) - 1);
+            set_name_filter(buf[0] ? buf : NULL);
+            noecho();
+            curs_set(0);
+            nodelay(stdscr, TRUE);
+        } else if (ch == 'u') {
+            char buf[32];
+            nodelay(stdscr, FALSE);
+            echo();
+            curs_set(1);
+            mvprintw(LINES - 1, 0, "User filter: ");
+            getnstr(buf, sizeof(buf) - 1);
+            set_user_filter(buf[0] ? buf : NULL);
+            noecho();
+            curs_set(0);
+            nodelay(stdscr, TRUE);
         } else if (ch == 'k') {
             char buf[16];
             nodelay(stdscr, FALSE);
