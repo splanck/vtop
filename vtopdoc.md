@@ -22,6 +22,16 @@ extract the command name, state, virtual size and resident set size.
 Only a subset of the fields is parsed, keeping the parser short and
 robust.
 
+`list_processes()` also reports the resident set size as a percentage of
+total system memory. The value is computed with
+
+```
+rss_percent = (rss * page_size / 1024) / MemTotal * 100
+```
+
+where `rss` comes from `/proc/[pid]/stat`, `page_size` is obtained from
+`getpagesize()` and `MemTotal` is read by `read_mem_stats()`.
+
 These functions provide a lightweight interface for higher level
 monitoring tools without requiring additional dependencies.
 
