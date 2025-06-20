@@ -64,3 +64,11 @@ The interactive display lists PID, USER, command name, state, virtual
 memory size, resident set size, memory usage percentage and CPU usage.
 In the interactive interface press `F3` or `>` to cycle to the next sort
 field and `<` to go back.
+
+Process management shortcuts are also available:
+
+- `k` &ndash; prompt for a PID and send `SIGTERM` to that process.
+- `r` &ndash; prompt for a PID and new nice value to adjust process priority.
+
+Use caution when running with elevated privileges because killing or
+renicing critical processes can destabilize the system.
