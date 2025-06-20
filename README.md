@@ -45,7 +45,7 @@ Press `F4` or `o` to toggle between ascending and descending order.
 
 Additional shortcuts:
 
-- Press `k` to send `SIGTERM` to a process. vtop will prompt for the PID.
+- Press `k` to send a custom signal to a process. vtop will prompt for the PID and signal number.
 - Press `r` to change a process's nice value. You will be asked for the
   PID and the new nice level.
 - Use `+` and `-` to increase or decrease the refresh delay while running.
