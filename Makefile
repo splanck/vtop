@@ -1,13 +1,13 @@
 CC := gcc
 CFLAGS := -Wall -O2 -Iinclude
 
-SRC := src/main.c
+SRC := src/main.c src/proc.c
 BIN := vtop
 
 all: $(BIN)
 
 $(BIN): $(SRC)
-	$(CC) $(CFLAGS) $< -o $@
+	$(CC) $(CFLAGS) $(SRC) -o $@
 
 run: $(BIN)
 	./$(BIN)
