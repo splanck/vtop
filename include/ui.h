@@ -7,6 +7,7 @@ enum sort_field {
     SORT_MEM
 };
 
-int run_ui(unsigned int delay_ms, enum sort_field sort);
+int run_ui(unsigned int delay_ms, enum sort_field sort,
+           unsigned int iterations);
 
 #endif /* UI_H */

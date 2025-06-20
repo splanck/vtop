@@ -71,7 +71,8 @@ static void set_sort(enum sort_field sort) {
     }
 }
 
-int run_ui(unsigned int delay_ms, enum sort_field sort) {
+int run_ui(unsigned int delay_ms, enum sort_field sort,
+           unsigned int iterations) {
     initscr();
     cbreak();
     noecho();
@@ -87,6 +88,7 @@ int run_ui(unsigned int delay_ms, enum sort_field sort) {
     double swap_usage = 0.0;
     size_t count = 0;
     int paused = 0;
+    unsigned int iter = 0;
 
     set_sort(sort);
     show_threads = get_thread_mode();
@@ -97,7 +99,7 @@ int run_ui(unsigned int delay_ms, enum sort_field sort) {
     if (interval > MAX_DELAY_MS)
         interval = MAX_DELAY_MS;
     int ch = 0;
-    while (ch != 'q') {
+    while (ch != 'q' && (iterations == 0 || iter < iterations)) {
         if (!paused && read_cpu_stats(&cs) == 0) {
             unsigned long long idle = cs.idle + cs.iowait;
             unsigned long long total = cs.user + cs.nice + cs.system +
@@ -216,6 +218,7 @@ int run_ui(unsigned int delay_ms, enum sort_field sort) {
         refresh();
         usleep(interval * 1000);
         ch = getch();
+        iter++;
         if (ch == KEY_F(3) || ch == '>') {
             if (current_sort == SORT_MEM)
                 set_sort(SORT_PID);
