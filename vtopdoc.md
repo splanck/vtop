@@ -24,3 +24,20 @@ robust.
 
 These functions provide a lightweight interface for higher level
 monitoring tools without requiring additional dependencies.
+
+## Command-line Options
+
+`vtop` accepts a few options similar to classic `top`.
+
+- `-d SECS` &mdash; Set the refresh delay in seconds. The default is
+  `3` seconds just like `top`.
+- `-s COL` &mdash; Choose the column to sort by. Supported values are
+  `pid`, `name`, `vsize` and `rss`. The default is `pid`.
+
+Examples:
+
+```sh
+vtop              # run with defaults (3s delay, sort by pid)
+vtop -d 1         # update every second
+vtop -s rss       # sort processes by resident set size
+```
