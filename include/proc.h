@@ -87,8 +87,10 @@ int read_misc_stats(struct misc_stats *stats);
 /* optional filtering */
 void set_name_filter(const char *substr);
 void set_user_filter(const char *user);
+void set_pid_filter(const char *list);
 const char *get_name_filter(void);
 const char *get_user_filter(void);
+const char *get_pid_filter(void);
 
 /* comparison helpers for sorting */
 int cmp_proc_pid(const void *a, const void *b);

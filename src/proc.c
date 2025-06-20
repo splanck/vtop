@@ -29,6 +29,9 @@ static size_t core_count;
 /* optional filters */
 static char name_filter[256] = "";
 static char user_filter[32] = "";
+static char pid_filter[256] = "";
+static int pid_list[64];
+static size_t pid_list_count;
 /* sort order: 0 = ascending, 1 = descending */
 static int sort_descending;
 /* show threads instead of processes */
@@ -61,11 +64,42 @@ void set_user_filter(const char *user) {
 const char *get_name_filter(void) { return name_filter; }
 const char *get_user_filter(void) { return user_filter; }
 
+void set_pid_filter(const char *list) {
+    pid_list_count = 0;
+    if (list && *list) {
+        strncpy(pid_filter, list, sizeof(pid_filter) - 1);
+        pid_filter[sizeof(pid_filter) - 1] = '\0';
+        char tmp[256];
+        strncpy(tmp, list, sizeof(tmp) - 1);
+        tmp[sizeof(tmp) - 1] = '\0';
+        char *tok = strtok(tmp, ",");
+        while (tok && pid_list_count < (sizeof(pid_list)/sizeof(pid_list[0]))) {
+            pid_list[pid_list_count++] = atoi(tok);
+            tok = strtok(NULL, ",");
+        }
+    } else {
+        pid_filter[0] = '\0';
+    }
+}
+
+const char *get_pid_filter(void) { return pid_filter; }
+
 size_t get_cpu_core_count(void) { return core_count; }
 
 const struct cpu_core_stats *get_cpu_core_stats(void) { return core_stats; }
 
-static int match_filter(const char *name, const char *user) {
+static int match_filter(int pid, const char *name, const char *user) {
+    if (pid_list_count > 0) {
+        int found = 0;
+        for (size_t i = 0; i < pid_list_count; i++) {
+            if (pid_list[i] == pid) {
+                found = 1;
+                break;
+            }
+        }
+        if (!found)
+            return 0;
+    }
     if (user_filter[0] && strcmp(user_filter, user) != 0)
         return 0;
     if (name_filter[0]) {
@@ -381,7 +415,7 @@ size_t list_processes(struct process_info *buf, size_t max) {
                         buf[count].cmdline[0] = '\0';
                     }
 
-                    if (!match_filter(buf[count].name, buf[count].user)) {
+                    if (!match_filter((int)pid, buf[count].name, buf[count].user)) {
                         fclose(fp);
                         continue;
                     }
@@ -500,7 +534,7 @@ size_t list_processes(struct process_info *buf, size_t max) {
                     buf[count].cmdline[0] = '\0';
                 }
 
-                if (!match_filter(buf[count].name, buf[count].user)) {
+                if (!match_filter((int)pid, buf[count].name, buf[count].user)) {
                     fclose(fp);
                     continue;
                 }
