@@ -334,19 +334,20 @@ static void show_help(void) {
     mvwprintw(win, 4, 2, "F3/>/<  Change sort field");
     mvwprintw(win, 5, 2, "F4/o    Toggle sort order");
     mvwprintw(win, 6, 2, "+/-     Adjust refresh delay");
-    mvwprintw(win, 7, 2, "/       Filter by command name");
-    mvwprintw(win, 8, 2, "u       Filter by user");
-    mvwprintw(win, 9, 2, "k       Kill a process");
-    mvwprintw(win, 10, 2, "r       Renice a process");
-    mvwprintw(win, 11, 2, "c       Toggle per-core view");
-    mvwprintw(win, 12, 2, "a       Toggle full command");
-    mvwprintw(win, 13, 2, "H       Toggle thread view");
-    mvwprintw(win, 14, 2, "i       Toggle idle processes");
-    mvwprintw(win, 15, 2, "z       Toggle colors");
-    mvwprintw(win, 16, 2, "f       Field manager");
-    mvwprintw(win, 17, 2, "W       Save config");
-    mvwprintw(win, 18, 2, "SPACE    Pause/resume");
-    mvwprintw(win, 19, 2, "h       Show this help");
+    mvwprintw(win, 7, 2, "d/s     Set refresh delay");
+    mvwprintw(win, 8, 2, "/       Filter by command name");
+    mvwprintw(win, 9, 2, "u       Filter by user");
+    mvwprintw(win, 10, 2, "k       Kill a process");
+    mvwprintw(win, 11, 2, "r       Renice a process");
+    mvwprintw(win, 12, 2, "c       Toggle per-core view");
+    mvwprintw(win, 13, 2, "a       Toggle full command");
+    mvwprintw(win, 14, 2, "H       Toggle thread view");
+    mvwprintw(win, 15, 2, "i       Toggle idle processes");
+    mvwprintw(win, 16, 2, "z       Toggle colors");
+    mvwprintw(win, 17, 2, "f       Field manager");
+    mvwprintw(win, 18, 2, "W       Save config");
+    mvwprintw(win, 19, 2, "SPACE    Pause/resume");
+    mvwprintw(win, 20, 2, "h       Show this help");
     mvwprintw(win, h - 2, 2, "Press any key to return");
     wrefresh(win);
     nodelay(stdscr, FALSE);
@@ -548,6 +549,24 @@ int run_ui(unsigned int delay_ms, enum sort_field sort,
         } else if (ch == '-') {
             if (interval > MIN_DELAY_MS)
                 interval -= 100;
+        } else if (ch == 'd' || ch == 's') {
+            char buf[16];
+            nodelay(stdscr, FALSE);
+            echo();
+            curs_set(1);
+            mvprintw(LINES - 1, 0, "Delay (s): ");
+            getnstr(buf, sizeof(buf) - 1);
+            double val = atof(buf);
+            if (val > 0.0) {
+                interval = (unsigned int)(val * 1000.0);
+                if (interval < MIN_DELAY_MS)
+                    interval = MIN_DELAY_MS;
+                if (interval > MAX_DELAY_MS)
+                    interval = MAX_DELAY_MS;
+            }
+            noecho();
+            curs_set(0);
+            nodelay(stdscr, TRUE);
         } else if (ch == '/') {
             char buf[64];
             nodelay(stdscr, FALSE);
