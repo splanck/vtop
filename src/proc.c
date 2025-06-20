@@ -278,6 +278,39 @@ int read_mem_stats(struct mem_stats *stats) {
     return 0;
 }
 
+size_t count_processes(void) {
+    DIR *dir = opendir("/proc");
+    if (!dir)
+        return 0;
+    struct dirent *ent;
+    size_t count = 0;
+    while ((ent = readdir(dir)) != NULL) {
+        char *endptr;
+        long pid = strtol(ent->d_name, &endptr, 10);
+        if (*endptr != '\0')
+            continue;
+        if (get_thread_mode()) {
+            char tpath[64];
+            snprintf(tpath, sizeof(tpath), "/proc/%ld/task", pid);
+            DIR *tdir = opendir(tpath);
+            if (!tdir)
+                continue;
+            struct dirent *tent;
+            while ((tent = readdir(tdir)) != NULL) {
+                char *e2;
+                strtol(tent->d_name, &e2, 10);
+                if (*e2 == '\0')
+                    count++;
+            }
+            closedir(tdir);
+        } else {
+            count++;
+        }
+    }
+    closedir(dir);
+    return count;
+}
+
 size_t list_processes(struct process_info *buf, size_t max) {
     struct cpu_stats cs;
     unsigned long long total_delta = 1;
