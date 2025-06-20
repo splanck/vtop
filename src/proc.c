@@ -21,6 +21,10 @@ static size_t prev_count;
 /* previous total CPU time for usage calculation */
 static unsigned long long last_total_cpu;
 
+/* per-core statistics parsed from /proc/stat */
+static struct cpu_core_stats *core_stats;
+static size_t core_count;
+
 /* optional filters */
 static char name_filter[256] = "";
 static char user_filter[32] = "";
@@ -45,6 +49,10 @@ void set_user_filter(const char *user) {
 
 const char *get_name_filter(void) { return name_filter; }
 const char *get_user_filter(void) { return user_filter; }
+
+size_t get_cpu_core_count(void) { return core_count; }
+
+const struct cpu_core_stats *get_cpu_core_stats(void) { return core_stats; }
 
 static int match_filter(const char *name, const char *user) {
     if (user_filter[0] && strcmp(user_filter, user) != 0)
@@ -73,13 +81,13 @@ int read_cpu_stats(struct cpu_stats *stats) {
     if (!fp) {
         return -1;
     }
+
     char buf[256];
     if (!fgets(buf, sizeof(buf), fp)) {
         fclose(fp);
         return -1;
     }
-    fclose(fp);
-    /* parse first line: cpu  user nice system idle iowait irq softirq steal */
+    /* parse overall cpu line */
     char cpu_label[16];
     int scanned = sscanf(buf, "%15s %llu %llu %llu %llu %llu %llu %llu %llu",
                          cpu_label,
@@ -91,7 +99,42 @@ int read_cpu_stats(struct cpu_stats *stats) {
                          &stats->irq,
                          &stats->softirq,
                          &stats->steal);
-    return scanned >= 5 ? 0 : -1;
+    if (scanned < 5) {
+        fclose(fp);
+        return -1;
+    }
+
+    /* read per-core lines */
+    free(core_stats);
+    core_stats = NULL;
+    core_count = 0;
+    while (fgets(buf, sizeof(buf), fp)) {
+        if (strncmp(buf, "cpu", 3) == 0 && isdigit((unsigned char)buf[3])) {
+            struct cpu_core_stats tmp;
+            scanned = sscanf(buf, "%15s %llu %llu %llu %llu %llu %llu %llu %llu",
+                             cpu_label,
+                             &tmp.user,
+                             &tmp.nice,
+                             &tmp.system,
+                             &tmp.idle,
+                             &tmp.iowait,
+                             &tmp.irq,
+                             &tmp.softirq,
+                             &tmp.steal);
+            if (scanned >= 5) {
+                struct cpu_core_stats *new_arr =
+                    realloc(core_stats, (core_count + 1) * sizeof(*core_stats));
+                if (new_arr) {
+                    core_stats = new_arr;
+                    core_stats[core_count++] = tmp;
+                }
+            }
+        } else {
+            break;
+        }
+    }
+    fclose(fp);
+    return 0;
 }
 
 static int read_mem_value(const char *key, unsigned long long *val) {

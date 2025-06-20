@@ -14,6 +14,17 @@ struct cpu_stats {
     unsigned long long steal;
 };
 
+struct cpu_core_stats {
+    unsigned long long user;
+    unsigned long long nice;
+    unsigned long long system;
+    unsigned long long idle;
+    unsigned long long iowait;
+    unsigned long long irq;
+    unsigned long long softirq;
+    unsigned long long steal;
+};
+
 struct mem_stats {
     unsigned long long total;
     unsigned long long free;
@@ -57,6 +68,8 @@ struct process_info {
 };
 
 int read_cpu_stats(struct cpu_stats *stats);
+size_t get_cpu_core_count(void);
+const struct cpu_core_stats *get_cpu_core_stats(void);
 int read_mem_stats(struct mem_stats *stats);
 size_t list_processes(struct process_info *buf, size_t max);
 int read_misc_stats(struct misc_stats *stats);
