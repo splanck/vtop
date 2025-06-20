@@ -56,6 +56,8 @@ struct process_info {
     char user[32];
     char name[256];
     char state;
+    long priority;
+    long nice;
     unsigned long long vsize;
     long rss;
     /* RSS as a percentage of total system memory */
