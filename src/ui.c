@@ -23,6 +23,10 @@ static int show_cores;
 static int show_full_cmd;
 static int show_threads;
 static int show_idle = 1;
+static int color_enabled = 1;
+
+#define CP_SORT 1
+#define CP_RUNNING 2
 
 static enum sort_field current_sort;
 static int (*compare_procs)(const void *, const void *) = cmp_proc_pid;
@@ -78,22 +82,44 @@ static void update_column_titles(void) {
     columns[COL_CMD].title = show_full_cmd ? "COMMAND" : "NAME";
 }
 
+static enum column_id get_sort_column(void) {
+    switch (current_sort) {
+    case SORT_CPU:
+        return COL_CPUP;
+    case SORT_MEM:
+        return COL_RSS;
+    case SORT_PID:
+    default:
+        return COL_PID;
+    }
+}
+
 static void draw_header(int row) {
     update_column_titles();
     int x = 0;
+    enum column_id sort_col = get_sort_column();
     for (int i = 0; i < COL_COUNT; i++) {
         if (!column_visible(i))
             continue;
+        if (color_enabled && columns[i].id == sort_col)
+            attron(COLOR_PAIR(CP_SORT));
         mvprintw(row, x, "%-*s", columns[i].width, columns[i].title);
+        if (color_enabled && columns[i].id == sort_col)
+            attroff(COLOR_PAIR(CP_SORT));
         x += columns[i].width + 1;
     }
 }
 
 static void draw_process_row(int row, const struct process_info *p) {
     int x = 0;
+    enum column_id sort_col = get_sort_column();
+    if (color_enabled && p->state == 'R')
+        attron(COLOR_PAIR(CP_RUNNING));
     for (int i = 0; i < COL_COUNT; i++) {
         if (!column_visible(i))
             continue;
+        if (color_enabled && columns[i].id == sort_col)
+            attron(COLOR_PAIR(CP_SORT));
         switch (columns[i].id) {
         case COL_PID:
             mvprintw(row, x, columns[i].left ? "%-*d" : "%*d",
@@ -154,8 +180,12 @@ static void draw_process_row(int row, const struct process_info *p) {
         default:
             break;
         }
+        if (color_enabled && columns[i].id == sort_col)
+            attroff(COLOR_PAIR(CP_SORT));
         x += columns[i].width + 1;
     }
+    if (color_enabled && p->state == 'R')
+        attroff(COLOR_PAIR(CP_RUNNING));
 }
 
 static void field_manager(void) {
@@ -189,7 +219,7 @@ static void field_manager(void) {
 }
 
 static void show_help(void) {
-    const int h = 20;
+    const int h = 21;
     const int w = 52;
     WINDOW *win = newwin(h, w, (LINES - h) / 2, (COLS - w) / 2);
     box(win, 0, 0);
@@ -206,9 +236,10 @@ static void show_help(void) {
     mvwprintw(win, 12, 2, "a       Toggle full command");
     mvwprintw(win, 13, 2, "H       Toggle thread view");
     mvwprintw(win, 14, 2, "i       Toggle idle processes");
-    mvwprintw(win, 15, 2, "f       Field manager");
-    mvwprintw(win, 16, 2, "SPACE    Pause/resume");
-    mvwprintw(win, 17, 2, "h       Show this help");
+    mvwprintw(win, 15, 2, "z       Toggle colors");
+    mvwprintw(win, 16, 2, "f       Field manager");
+    mvwprintw(win, 17, 2, "SPACE    Pause/resume");
+    mvwprintw(win, 18, 2, "h       Show this help");
     mvwprintw(win, h - 2, 2, "Press any key to return");
     wrefresh(win);
     nodelay(stdscr, FALSE);
@@ -242,6 +273,12 @@ int run_ui(unsigned int delay_ms, enum sort_field sort,
     noecho();
     keypad(stdscr, TRUE);
     nodelay(stdscr, TRUE);
+    if (has_colors()) {
+        start_color();
+        use_default_colors();
+        init_pair(CP_SORT, COLOR_YELLOW, -1);
+        init_pair(CP_RUNNING, COLOR_GREEN, -1);
+    }
 
     struct process_info procs[MAX_PROC];
     struct cpu_stats cs;
@@ -438,6 +475,10 @@ int run_ui(unsigned int delay_ms, enum sort_field sort,
         } else if (ch == 'i') {
             show_idle = !show_idle;
             set_show_idle(show_idle);
+        } else if (ch == 'z') {
+            color_enabled = !color_enabled;
+            if (!color_enabled)
+                attrset(A_NORMAL);
         } else if (ch == 'f') {
             field_manager();
         } else if (ch == ' ') {
