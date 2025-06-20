@@ -50,6 +50,8 @@ struct misc_stats {
 
 struct process_info {
     int pid;
+    /* Thread ID (equals pid when not showing threads) */
+    int tid;
     /* Numeric user ID of the process */
     unsigned int uid;
     /* Short username resolved from uid */
@@ -96,5 +98,9 @@ int cmp_proc_mem(const void *a, const void *b);
 /* sort order control */
 void set_sort_descending(int desc);
 int get_sort_descending(void);
+
+/* thread listing control */
+void set_thread_mode(int on);
+int get_thread_mode(void);
 
 #endif /* PROC_H */

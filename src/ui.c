@@ -21,12 +21,13 @@ static unsigned long long *core_prev_idle;
 static size_t core_count;
 static int show_cores;
 static int show_full_cmd;
+static int show_threads;
 
 static enum sort_field current_sort;
 static int (*compare_procs)(const void *, const void *) = cmp_proc_pid;
 
 static void show_help(void) {
-    const int h = 17;
+    const int h = 18;
     const int w = 52;
     WINDOW *win = newwin(h, w, (LINES - h) / 2, (COLS - w) / 2);
     box(win, 0, 0);
@@ -41,8 +42,9 @@ static void show_help(void) {
     mvwprintw(win, 10, 2, "r       Renice a process");
     mvwprintw(win, 11, 2, "c       Toggle per-core view");
     mvwprintw(win, 12, 2, "a       Toggle full command");
-    mvwprintw(win, 13, 2, "SPACE    Pause/resume");
-    mvwprintw(win, 14, 2, "h       Show this help");
+    mvwprintw(win, 13, 2, "H       Toggle thread view");
+    mvwprintw(win, 14, 2, "SPACE    Pause/resume");
+    mvwprintw(win, 15, 2, "h       Show this help");
     mvwprintw(win, h - 2, 2, "Press any key to return");
     wrefresh(win);
     nodelay(stdscr, FALSE);
@@ -87,6 +89,8 @@ int run_ui(unsigned int delay_ms, enum sort_field sort) {
     int paused = 0;
 
     set_sort(sort);
+    show_threads = get_thread_mode();
+    set_thread_mode(show_threads);
     unsigned int interval = delay_ms;
     if (interval < MIN_DELAY_MS)
         interval = MIN_DELAY_MS;
@@ -183,18 +187,31 @@ int run_ui(unsigned int delay_ms, enum sort_field sort) {
         }
         mvprintw(row, 0, "%s",
                  show_full_cmd ?
-                     "PID      USER     COMMAND                  STATE PRI  NICE  VSIZE    RSS  RSS%  CPU%   TIME     START" :
-                     "PID      USER     NAME                     STATE PRI  NICE  VSIZE    RSS  RSS%  CPU%   TIME     START");
+                     (show_threads ?
+                          "PID      TID      USER     COMMAND                  STATE PRI  NICE  VSIZE    RSS  RSS%  CPU%   TIME     START" :
+                          "PID      USER     COMMAND                  STATE PRI  NICE  VSIZE    RSS  RSS%  CPU%   TIME     START") :
+                     (show_threads ?
+                          "PID      TID      USER     NAME                     STATE PRI  NICE  VSIZE    RSS  RSS%  CPU%   TIME     START" :
+                          "PID      USER     NAME                     STATE PRI  NICE  VSIZE    RSS  RSS%  CPU%   TIME     START"));
         for (size_t i = 0; i < count && i < LINES - row - 2; i++) {
             const char *disp = show_full_cmd && procs[i].cmdline[0] ?
                                 procs[i].cmdline : procs[i].name;
-            mvprintw(i + row + 1, 0,
-                     "%-8d %-8s %-25s %c %4ld %5ld %8llu %5ld %6.2f %6.2f %8.0f %-8s",
-                     procs[i].pid, procs[i].user, disp, procs[i].state,
-                     procs[i].priority, procs[i].nice,
-                     procs[i].vsize, procs[i].rss,
-                     procs[i].rss_percent, procs[i].cpu_usage,
-                     procs[i].cpu_time, procs[i].start_time);
+            if (show_threads)
+                mvprintw(i + row + 1, 0,
+                         "%-8d %-8d %-8s %-25s %c %4ld %5ld %8llu %5ld %6.2f %6.2f %8.0f %-8s",
+                         procs[i].pid, procs[i].tid, procs[i].user, disp, procs[i].state,
+                         procs[i].priority, procs[i].nice,
+                         procs[i].vsize, procs[i].rss,
+                         procs[i].rss_percent, procs[i].cpu_usage,
+                         procs[i].cpu_time, procs[i].start_time);
+            else
+                mvprintw(i + row + 1, 0,
+                         "%-8d %-8s %-25s %c %4ld %5ld %8llu %5ld %6.2f %6.2f %8.0f %-8s",
+                         procs[i].pid, procs[i].user, disp, procs[i].state,
+                         procs[i].priority, procs[i].nice,
+                         procs[i].vsize, procs[i].rss,
+                         procs[i].rss_percent, procs[i].cpu_usage,
+                         procs[i].cpu_time, procs[i].start_time);
         }
         refresh();
         usleep(interval * 1000);
@@ -271,6 +288,9 @@ int run_ui(unsigned int delay_ms, enum sort_field sort) {
             show_cores = !show_cores;
         } else if (ch == 'a') {
             show_full_cmd = !show_full_cmd;
+        } else if (ch == 'H') {
+            show_threads = !show_threads;
+            set_thread_mode(show_threads);
         } else if (ch == ' ') {
             paused = !paused;
         } else if (ch == 'h') {
