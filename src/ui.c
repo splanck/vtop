@@ -24,6 +24,7 @@ static int show_full_cmd;
 static int show_threads;
 static int show_idle = 1;
 static int color_enabled = 1;
+static int show_forest;
 
 #define CP_SORT 1
 #define CP_RUNNING 2
@@ -120,6 +121,8 @@ int ui_load_config(unsigned int *delay_ms, enum sort_field *sort) {
             show_threads = atoi(val);
         } else if (strcmp(key, "show_idle") == 0) {
             show_idle = atoi(val);
+        } else if (strcmp(key, "show_forest") == 0) {
+            show_forest = atoi(val);
         } else if (strcmp(key, "color_enabled") == 0) {
             color_enabled = atoi(val);
         } else if (strcmp(key, "columns") == 0) {
@@ -150,6 +153,7 @@ int ui_save_config(unsigned int delay_ms, enum sort_field sort) {
     fprintf(fp, "show_full_cmd=%d\n", show_full_cmd);
     fprintf(fp, "show_threads=%d\n", show_threads);
     fprintf(fp, "show_idle=%d\n", show_idle);
+    fprintf(fp, "show_forest=%d\n", show_forest);
     fprintf(fp, "color_enabled=%d\n", color_enabled);
     fprintf(fp, "columns=");
     for (int i = 0; i < COL_COUNT; i++) {
@@ -225,8 +229,16 @@ static void draw_process_row(int row, const struct process_info *p) {
             break;
         case COL_CMD: {
             const char *d = show_full_cmd && p->cmdline[0] ? p->cmdline : p->name;
-            mvprintw(row, x, columns[i].left ? "%-*s" : "%*s",
-                     columns[i].width, d);
+            char buf[512];
+            if (show_forest) {
+                int indent = p->level * 2;
+                if (indent < (int)sizeof(buf) - 1) {
+                    snprintf(buf, sizeof(buf), "%*s%s", indent, "", d);
+                    d = buf;
+                }
+            }
+            mvprintw(row, x, columns[i].left ? "%-*.*s" : "%*.*s",
+                     columns[i].width, columns[i].width, d);
             break;
         }
         case COL_STATE: {
@@ -319,7 +331,7 @@ static void field_manager(void) {
 }
 
 static void show_help(void) {
-    const int h = 22;
+    const int h = 23;
     const int w = 52;
     int startx = COLS > w ? (COLS - w) / 2 : 0;
     if (startx < 0)
@@ -343,11 +355,12 @@ static void show_help(void) {
     mvwprintw(win, 13, 2, "a       Toggle full command");
     mvwprintw(win, 14, 2, "H       Toggle thread view");
     mvwprintw(win, 15, 2, "i       Toggle idle processes");
-    mvwprintw(win, 16, 2, "z       Toggle colors");
-    mvwprintw(win, 17, 2, "f       Field manager");
-    mvwprintw(win, 18, 2, "W       Save config");
-    mvwprintw(win, 19, 2, "SPACE    Pause/resume");
-    mvwprintw(win, 20, 2, "h       Show this help");
+    mvwprintw(win, 16, 2, "V       Toggle process tree");
+    mvwprintw(win, 17, 2, "z       Toggle colors");
+    mvwprintw(win, 18, 2, "f       Field manager");
+    mvwprintw(win, 19, 2, "W       Save config");
+    mvwprintw(win, 20, 2, "SPACE    Pause/resume");
+    mvwprintw(win, 21, 2, "h       Show this help");
     mvwprintw(win, h - 2, 2, "Press any key to return");
     wrefresh(win);
     nodelay(stdscr, FALSE);
@@ -372,6 +385,48 @@ static void set_sort(enum sort_field sort) {
         set_sort_descending(1);
         break;
     }
+}
+
+/* Build process list in parent->child order and set indentation levels */
+static void add_subtree(size_t idx, struct process_info *src, size_t count,
+                        int *used, struct process_info *dest, size_t *out,
+                        int level) {
+    used[idx] = 1;
+    dest[*out] = src[idx];
+    dest[*out].level = level;
+    (*out)++;
+    for (size_t i = 0; i < count; i++) {
+        if (!used[i] && src[i].ppid == src[idx].pid) {
+            add_subtree(i, src, count, used, dest, out, level + 1);
+        }
+    }
+}
+
+static void build_forest(struct process_info *procs, size_t count) {
+    if (count == 0)
+        return;
+    struct process_info *tmp = malloc(count * sizeof(*tmp));
+    int *used = calloc(count, sizeof(int));
+    size_t out = 0;
+    for (size_t i = 0; i < count; i++) {
+        int parent_found = 0;
+        for (size_t j = 0; j < count; j++) {
+            if (procs[i].ppid == procs[j].pid) {
+                parent_found = 1;
+                break;
+            }
+        }
+        if (!parent_found && !used[i]) {
+            add_subtree(i, procs, count, used, tmp, &out, 0);
+        }
+    }
+    for (size_t i = 0; i < count; i++) {
+        if (!used[i])
+            add_subtree(i, procs, count, used, tmp, &out, 0);
+    }
+    memcpy(procs, tmp, count * sizeof(*tmp));
+    free(tmp);
+    free(used);
 }
 
 int run_ui(unsigned int delay_ms, enum sort_field sort,
@@ -475,7 +530,12 @@ int run_ui(unsigned int delay_ms, enum sort_field sort,
             }
             count = list_processes(procs, proc_cap);
         }
-        qsort(procs, count, sizeof(struct process_info), compare_procs);
+        if (show_forest) {
+            qsort(procs, count, sizeof(struct process_info), cmp_proc_pid);
+            build_forest(procs, count);
+        } else {
+            qsort(procs, count, sizeof(struct process_info), compare_procs);
+        }
         erase();
         char fbuf[128] = "";
         const char *nf = get_name_filter();
@@ -633,6 +693,8 @@ int run_ui(unsigned int delay_ms, enum sort_field sort,
         } else if (ch == 'i') {
             show_idle = !show_idle;
             set_show_idle(show_idle);
+        } else if (ch == 'V') {
+            show_forest = !show_forest;
         } else if (ch == 'z') {
             color_enabled = !color_enabled;
             if (!color_enabled)

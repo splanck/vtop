@@ -384,13 +384,14 @@ size_t list_processes(struct process_info *buf, size_t max) {
                 if (fgets(line, sizeof(line), fp)) {
                     char comm[256];
                     char state;
+                    int ppid;
                     unsigned long long utime, stime, starttime;
                     long priority, niceval;
                     unsigned long long vsize;
                     long rss;
                     sscanf(line,
-                           "%*d (%255[^)]) %c %*s %*s %*s %*s %*s %*s %*s %*s %*s %*s %llu %llu %*s %*s %ld %ld %*s %*s %llu %llu %ld",
-                           comm, &state, &utime, &stime, &priority, &niceval, &starttime, &vsize, &rss);
+                           "%*d (%255[^)]) %c %d %*s %*s %*s %*s %*s %*s %*s %*s %*s %*s %llu %llu %*s %*s %ld %ld %*s %*s %llu %llu %ld",
+                           comm, &state, &ppid, &utime, &stime, &priority, &niceval, &starttime, &vsize, &rss);
 
                     unsigned int uid = 0;
                     snprintf(path, sizeof(path), "/proc/%ld/status", pid);
@@ -433,6 +434,7 @@ size_t list_processes(struct process_info *buf, size_t max) {
 
                     buf[count].pid = (int)pid;
                     buf[count].tid = (int)tid;
+                    buf[count].ppid = ppid;
                     buf[count].uid = uid;
                     struct passwd *pw = getpwuid((uid_t)uid);
                     if (pw) {
@@ -493,6 +495,7 @@ size_t list_processes(struct process_info *buf, size_t max) {
                     else
                         strncpy(buf[count].start_time, "??:??:??",
                                 sizeof(buf[count].start_time));
+                    buf[count].level = 0;
                     count++;
                 }
                 fclose(fp);
@@ -508,13 +511,14 @@ size_t list_processes(struct process_info *buf, size_t max) {
             if (fgets(line, sizeof(line), fp)) {
                 char comm[256];
                 char state;
+                int ppid;
                 unsigned long long utime, stime, starttime;
                 long priority, niceval;
                 unsigned long long vsize;
                 long rss;
                 sscanf(line,
-                       "%*d (%255[^)]) %c %*s %*s %*s %*s %*s %*s %*s %*s %*s %*s %llu %llu %*s %*s %ld %ld %*s %*s %llu %llu %ld",
-                       comm, &state, &utime, &stime, &priority, &niceval, &starttime, &vsize, &rss);
+                       "%*d (%255[^)]) %c %d %*s %*s %*s %*s %*s %*s %*s %*s %*s %*s %llu %llu %*s %*s %ld %ld %*s %*s %llu %llu %ld",
+                       comm, &state, &ppid, &utime, &stime, &priority, &niceval, &starttime, &vsize, &rss);
 
                 unsigned int uid = 0;
                 snprintf(path, sizeof(path), "/proc/%ld/status", pid);
@@ -557,6 +561,7 @@ size_t list_processes(struct process_info *buf, size_t max) {
 
                 buf[count].pid = (int)pid;
                 buf[count].tid = (int)pid;
+                buf[count].ppid = ppid;
                 buf[count].uid = uid;
                 struct passwd *pw = getpwuid((uid_t)uid);
                 if (pw) {
@@ -617,6 +622,7 @@ size_t list_processes(struct process_info *buf, size_t max) {
                 else
                     strncpy(buf[count].start_time, "??:??:??",
                             sizeof(buf[count].start_time));
+                buf[count].level = 0;
                 count++;
             }
             fclose(fp);
