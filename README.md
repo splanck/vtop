@@ -47,6 +47,7 @@ Additional shortcuts:
 - Press `a` to toggle between the short command name and the full command line.
 - Press `H` to toggle thread view (show individual threads).
 - Press `i` to hide or show processes with zero CPU usage.
+- Press `z` to toggle color output.
 - Press `F4` or `o` to change the sort direction.
 - Press `space` to pause or resume updates.
 - Press `h` to open a small help window with available shortcuts.
