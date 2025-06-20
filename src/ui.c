@@ -26,7 +26,7 @@ static enum sort_field current_sort;
 static int (*compare_procs)(const void *, const void *) = cmp_proc_pid;
 
 static void show_help(void) {
-    const int h = 14;
+    const int h = 16;
     const int w = 52;
     WINDOW *win = newwin(h, w, (LINES - h) / 2, (COLS - w) / 2);
     box(win, 0, 0);
@@ -40,7 +40,8 @@ static void show_help(void) {
     mvwprintw(win, 9, 2, "r       Renice a process");
     mvwprintw(win, 10, 2, "c       Toggle per-core view");
     mvwprintw(win, 11, 2, "a       Toggle full command");
-    mvwprintw(win, 12, 2, "h       Show this help");
+    mvwprintw(win, 12, 2, "SPACE    Pause/resume");
+    mvwprintw(win, 13, 2, "h       Show this help");
     mvwprintw(win, h - 2, 2, "Press any key to return");
     wrefresh(win);
     nodelay(stdscr, FALSE);
@@ -78,6 +79,8 @@ int run_ui(unsigned int delay_ms, enum sort_field sort) {
     double cpu_usage = 0.0;
     double mem_usage = 0.0;
     double swap_usage = 0.0;
+    size_t count = 0;
+    int paused = 0;
 
     set_sort(sort);
     unsigned int interval = delay_ms;
@@ -87,7 +90,7 @@ int run_ui(unsigned int delay_ms, enum sort_field sort) {
         interval = MAX_DELAY_MS;
     int ch = 0;
     while (ch != 'q') {
-        if (read_cpu_stats(&cs) == 0) {
+        if (!paused && read_cpu_stats(&cs) == 0) {
             unsigned long long idle = cs.idle + cs.iowait;
             unsigned long long total = cs.user + cs.nice + cs.system +
                                        cs.irq + cs.softirq + cs.steal + idle;
@@ -126,7 +129,7 @@ int run_ui(unsigned int delay_ms, enum sort_field sort) {
                 core_prev_idle[i] = cidle;
             }
         }
-        if (read_mem_stats(&ms) == 0 && ms.total > 0) {
+        if (!paused && read_mem_stats(&ms) == 0 && ms.total > 0) {
             unsigned long long used = ms.total - ms.available;
             mem_usage = 100.0 * (double)used / (double)ms.total;
             if (ms.swap_total > 0)
@@ -135,9 +138,11 @@ int run_ui(unsigned int delay_ms, enum sort_field sort) {
             else
                 swap_usage = 0.0;
         }
-        read_misc_stats(&misc);
+        if (!paused)
+            read_misc_stats(&misc);
 
-        size_t count = list_processes(procs, MAX_PROC);
+        if (!paused)
+            count = list_processes(procs, MAX_PROC);
         qsort(procs, count, sizeof(struct process_info), compare_procs);
         erase();
         char fbuf[128] = "";
@@ -152,12 +157,12 @@ int run_ui(unsigned int delay_ms, enum sort_field sort) {
             strncat(fbuf, uf, sizeof(fbuf) - strlen(fbuf) - 1);
         }
         mvprintw(0, 0,
-                 "load %.2f %.2f %.2f  up %.0fs  tasks %d/%d  cpu %5.1f%% us %.1f%% sy %.1f%% id %.1f%%  mem %5.1f%%  swap %llu/%llu %.1f%%  intv %.1fs%s",
+                 "load %.2f %.2f %.2f  up %.0fs  tasks %d/%d  cpu %5.1f%% us %.1f%% sy %.1f%% id %.1f%%  mem %5.1f%%  swap %llu/%llu %.1f%%  intv %.1fs%s%s",
                  misc.load1, misc.load5, misc.load15, misc.uptime,
                  misc.running_tasks, misc.total_tasks, cpu_usage,
                  cs.user_percent, cs.system_percent, cs.idle_percent,
                  mem_usage, ms.swap_used, ms.swap_total, swap_usage,
-                 interval / 1000.0, fbuf);
+                 interval / 1000.0, paused ? " [PAUSED]" : "", fbuf);
         int row = 1;
         if (show_cores && core_count > 0) {
             char cbuf[256] = "";
@@ -260,6 +265,8 @@ int run_ui(unsigned int delay_ms, enum sort_field sort) {
             show_cores = !show_cores;
         } else if (ch == 'a') {
             show_full_cmd = !show_full_cmd;
+        } else if (ch == ' ') {
+            paused = !paused;
         } else if (ch == 'h') {
             show_help();
         }

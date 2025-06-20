@@ -39,6 +39,7 @@ Additional shortcuts:
 - Use `+` and `-` to increase or decrease the refresh delay while running.
 - Press `c` to toggle per-core CPU usage display.
 - Press `a` to toggle between the short command name and the full command line.
+- Press `space` to pause or resume updates.
 - Press `h` to open a small help window with available shortcuts.
 
 These controls operate on live processes. Ensure you have permission to
