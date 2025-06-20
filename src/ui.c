@@ -68,6 +68,7 @@ int run_ui(unsigned int delay_ms, enum sort_field sort) {
     struct misc_stats misc;
     double cpu_usage = 0.0;
     double mem_usage = 0.0;
+    double swap_usage = 0.0;
 
     set_sort(sort);
     unsigned int interval = delay_ms;
@@ -91,6 +92,11 @@ int run_ui(unsigned int delay_ms, enum sort_field sort) {
         if (read_mem_stats(&ms) == 0 && ms.total > 0) {
             unsigned long long used = ms.total - ms.available;
             mem_usage = 100.0 * (double)used / (double)ms.total;
+            if (ms.swap_total > 0)
+                swap_usage = 100.0 * (double)ms.swap_used /
+                             (double)ms.swap_total;
+            else
+                swap_usage = 0.0;
         }
         read_misc_stats(&misc);
 
@@ -109,9 +115,10 @@ int run_ui(unsigned int delay_ms, enum sort_field sort) {
             strncat(fbuf, uf, sizeof(fbuf) - strlen(fbuf) - 1);
         }
         mvprintw(0, 0,
-                 "load %.2f %.2f %.2f  up %.0fs  tasks %d/%d  cpu %5.1f%%  mem %5.1f%%  intv %.1fs%s",
+                 "load %.2f %.2f %.2f  up %.0fs  tasks %d/%d  cpu %5.1f%%  mem %5.1f%%  swap %llu/%llu %.1f%%  intv %.1fs%s",
                  misc.load1, misc.load5, misc.load15, misc.uptime,
                  misc.running_tasks, misc.total_tasks, cpu_usage, mem_usage,
+                 ms.swap_used, ms.swap_total, swap_usage,
                  interval / 1000.0, fbuf);
         mvprintw(1, 0, "%s",
                  "PID      USER     NAME                     STATE  VSIZE    RSS  RSS%  CPU%   TIME     START");
