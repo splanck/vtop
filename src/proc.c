@@ -12,6 +12,7 @@
 #define MAX_PREV 1024
 struct prev_entry {
     int pid;
+    int tid;
     unsigned long long utime;
     unsigned long long stime;
 };
@@ -30,9 +31,14 @@ static char name_filter[256] = "";
 static char user_filter[32] = "";
 /* sort order: 0 = ascending, 1 = descending */
 static int sort_descending;
+/* show threads instead of processes */
+static int thread_mode;
 
 void set_sort_descending(int desc) { sort_descending = desc != 0; }
 int get_sort_descending(void) { return sort_descending; }
+
+void set_thread_mode(int on) { thread_mode = on != 0; }
+int get_thread_mode(void) { return thread_mode; }
 
 void set_name_filter(const char *substr) {
     if (substr && *substr) {
@@ -276,121 +282,253 @@ size_t list_processes(struct process_info *buf, size_t max) {
         long pid = strtol(ent->d_name, &endptr, 10);
         if (*endptr != '\0')
             continue; /* not a pid */
-        char path[64];
-        snprintf(path, sizeof(path), "/proc/%ld/stat", pid);
-        FILE *fp = fopen(path, "r");
-        if (!fp)
-            continue;
-        char line[1024];
-        if (fgets(line, sizeof(line), fp)) {
-            /* pid (comm) state ... utime stime ... priority nice ... starttime vsize rss */
-            char comm[256];
-            char state;
-            unsigned long long utime, stime, starttime;
-            long priority, niceval;
-            unsigned long long vsize;
-            long rss;
-            sscanf(line,
-                   "%*d (%255[^)]) %c %*s %*s %*s %*s %*s %*s %*s %*s %*s %*s %llu %llu %*s %*s %ld %ld %*s %*s %llu %llu %ld",
-                   comm, &state, &utime, &stime, &priority, &niceval, &starttime, &vsize, &rss);
+        char tpath[64];
+        if (get_thread_mode()) {
+            snprintf(tpath, sizeof(tpath), "/proc/%ld/task", pid);
+            DIR *tdir = opendir(tpath);
+            if (!tdir)
+                continue;
+            struct dirent *tent;
+            while ((tent = readdir(tdir)) != NULL && count < max) {
+                long tid = strtol(tent->d_name, &endptr, 10);
+                if (*endptr != '\0')
+                    continue;
+                char path[64];
+                snprintf(path, sizeof(path), "/proc/%ld/task/%ld/stat", pid, tid);
+                FILE *fp = fopen(path, "r");
+                if (!fp)
+                    continue;
+                char line[1024];
+                if (fgets(line, sizeof(line), fp)) {
+                    char comm[256];
+                    char state;
+                    unsigned long long utime, stime, starttime;
+                    long priority, niceval;
+                    unsigned long long vsize;
+                    long rss;
+                    sscanf(line,
+                           "%*d (%255[^)]) %c %*s %*s %*s %*s %*s %*s %*s %*s %*s %*s %llu %llu %*s %*s %ld %ld %*s %*s %llu %llu %ld",
+                           comm, &state, &utime, &stime, &priority, &niceval, &starttime, &vsize, &rss);
 
-            unsigned int uid = 0;
-            snprintf(path, sizeof(path), "/proc/%ld/status", pid);
-            FILE *fs = fopen(path, "r");
-            if (fs) {
-                char line2[256];
-                while (fgets(line2, sizeof(line2), fs)) {
-                    if (strncmp(line2, "Uid:", 4) == 0) {
-                        sscanf(line2 + 4, "%u", &uid);
+                    unsigned int uid = 0;
+                    snprintf(path, sizeof(path), "/proc/%ld/status", pid);
+                    FILE *fs = fopen(path, "r");
+                    if (fs) {
+                        char line2[256];
+                        while (fgets(line2, sizeof(line2), fs)) {
+                            if (strncmp(line2, "Uid:", 4) == 0) {
+                                sscanf(line2 + 4, "%u", &uid);
+                                break;
+                            }
+                        }
+                        fclose(fs);
+                    }
+
+                    unsigned long long old_utime = 0, old_stime = 0;
+                    for (size_t i = 0; i < prev_count; i++) {
+                        if (prev_table[i].pid == pid && prev_table[i].tid == tid) {
+                            old_utime = prev_table[i].utime;
+                            old_stime = prev_table[i].stime;
+                            prev_table[i].utime = utime;
+                            prev_table[i].stime = stime;
+                            break;
+                        }
+                    }
+                    if (old_utime == 0 && old_stime == 0 && prev_count < MAX_PREV) {
+                        prev_table[prev_count].pid = pid;
+                        prev_table[prev_count].tid = tid;
+                        prev_table[prev_count].utime = utime;
+                        prev_table[prev_count].stime = stime;
+                        prev_count++;
+                    }
+
+                    unsigned long long delta = (utime - old_utime) + (stime - old_stime);
+                    double usage = 100.0 * (double)delta / (double)total_delta;
+
+                    buf[count].pid = (int)pid;
+                    buf[count].tid = (int)tid;
+                    buf[count].uid = uid;
+                    struct passwd *pw = getpwuid((uid_t)uid);
+                    if (pw) {
+                        strncpy(buf[count].user, pw->pw_name, sizeof(buf[count].user) - 1);
+                        buf[count].user[sizeof(buf[count].user) - 1] = '\0';
+                    } else {
+                        snprintf(buf[count].user, sizeof(buf[count].user), "%u", uid);
+                    }
+                    strncpy(buf[count].name, comm, sizeof(buf[count].name) - 1);
+                    buf[count].name[sizeof(buf[count].name) - 1] = '\0';
+
+                    snprintf(path, sizeof(path), "/proc/%ld/cmdline", pid);
+                    FILE *fc = fopen(path, "r");
+                    if (fc) {
+                        size_t r = fread(buf[count].cmdline, 1,
+                                         sizeof(buf[count].cmdline) - 1, fc);
+                        fclose(fc);
+                        size_t j = 0;
+                        for (size_t i = 0; i < r && j < sizeof(buf[count].cmdline) - 1; i++) {
+                            char c = buf[count].cmdline[i];
+                            if (c == '\0') {
+                                if (j > 0 && buf[count].cmdline[j - 1] != ' ')
+                                    buf[count].cmdline[j++] = ' ';
+                            } else {
+                                buf[count].cmdline[j++] = c;
+                            }
+                        }
+                        if (j > 0 && buf[count].cmdline[j - 1] == ' ')
+                            j--; /* strip trailing space */
+                        buf[count].cmdline[j] = '\0';
+                    } else {
+                        buf[count].cmdline[0] = '\0';
+                    }
+
+                    if (!match_filter(buf[count].name, buf[count].user)) {
+                        fclose(fp);
+                        continue;
+                    }
+
+                    buf[count].state = state;
+                    buf[count].priority = priority;
+                    buf[count].nice = niceval;
+                    buf[count].vsize = vsize;
+                    buf[count].rss = rss;
+                    buf[count].rss_percent = 100.0 * (double)rss * (double)page_kb /
+                                           (double)ms.total;
+                    buf[count].utime = utime;
+                    buf[count].stime = stime;
+                    buf[count].cpu_usage = usage;
+                    buf[count].cpu_time = (double)(utime + stime) / (double)clk_tck;
+                    time_t start_epoch = (time_t)(boot_time +
+                                                 (double)starttime / (double)clk_tck);
+                    struct tm *tm = localtime(&start_epoch);
+                    if (tm)
+                        strftime(buf[count].start_time, sizeof(buf[count].start_time),
+                                 "%H:%M:%S", tm);
+                    else
+                        strncpy(buf[count].start_time, "??:??:??",
+                                sizeof(buf[count].start_time));
+                    count++;
+                }
+                fclose(fp);
+            }
+            closedir(tdir);
+        } else {
+            char path[64];
+            snprintf(path, sizeof(path), "/proc/%ld/stat", pid);
+            FILE *fp = fopen(path, "r");
+            if (!fp)
+                continue;
+            char line[1024];
+            if (fgets(line, sizeof(line), fp)) {
+                char comm[256];
+                char state;
+                unsigned long long utime, stime, starttime;
+                long priority, niceval;
+                unsigned long long vsize;
+                long rss;
+                sscanf(line,
+                       "%*d (%255[^)]) %c %*s %*s %*s %*s %*s %*s %*s %*s %*s %*s %llu %llu %*s %*s %ld %ld %*s %*s %llu %llu %ld",
+                       comm, &state, &utime, &stime, &priority, &niceval, &starttime, &vsize, &rss);
+
+                unsigned int uid = 0;
+                snprintf(path, sizeof(path), "/proc/%ld/status", pid);
+                FILE *fs = fopen(path, "r");
+                if (fs) {
+                    char line2[256];
+                    while (fgets(line2, sizeof(line2), fs)) {
+                        if (strncmp(line2, "Uid:", 4) == 0) {
+                            sscanf(line2 + 4, "%u", &uid);
+                            break;
+                        }
+                    }
+                    fclose(fs);
+                }
+
+                unsigned long long old_utime = 0, old_stime = 0;
+                for (size_t i = 0; i < prev_count; i++) {
+                    if (prev_table[i].pid == pid && prev_table[i].tid == pid) {
+                        old_utime = prev_table[i].utime;
+                        old_stime = prev_table[i].stime;
+                        prev_table[i].utime = utime;
+                        prev_table[i].stime = stime;
                         break;
                     }
                 }
-                fclose(fs);
-            }
-
-            unsigned long long old_utime = 0, old_stime = 0;
-            for (size_t i = 0; i < prev_count; i++) {
-                if (prev_table[i].pid == pid) {
-                    old_utime = prev_table[i].utime;
-                    old_stime = prev_table[i].stime;
-                    prev_table[i].utime = utime;
-                    prev_table[i].stime = stime;
-                    break;
+                if (old_utime == 0 && old_stime == 0 && prev_count < MAX_PREV) {
+                    prev_table[prev_count].pid = pid;
+                    prev_table[prev_count].tid = pid;
+                    prev_table[prev_count].utime = utime;
+                    prev_table[prev_count].stime = stime;
+                    prev_count++;
                 }
-            }
-            if (old_utime == 0 && old_stime == 0 && prev_count < MAX_PREV) {
-                prev_table[prev_count].pid = pid;
-                prev_table[prev_count].utime = utime;
-                prev_table[prev_count].stime = stime;
-                prev_count++;
-            }
 
-            unsigned long long delta = (utime - old_utime) + (stime - old_stime);
-            double usage = 100.0 * (double)delta / (double)total_delta;
+                unsigned long long delta = (utime - old_utime) + (stime - old_stime);
+                double usage = 100.0 * (double)delta / (double)total_delta;
 
-            buf[count].pid = (int)pid;
-            buf[count].uid = uid;
-            struct passwd *pw = getpwuid((uid_t)uid);
-            if (pw) {
-                strncpy(buf[count].user, pw->pw_name, sizeof(buf[count].user) - 1);
-                buf[count].user[sizeof(buf[count].user) - 1] = '\0';
-            } else {
-                snprintf(buf[count].user, sizeof(buf[count].user), "%u", uid);
-            }
-            strncpy(buf[count].name, comm, sizeof(buf[count].name) - 1);
-            buf[count].name[sizeof(buf[count].name) - 1] = '\0';
+                buf[count].pid = (int)pid;
+                buf[count].tid = (int)pid;
+                buf[count].uid = uid;
+                struct passwd *pw = getpwuid((uid_t)uid);
+                if (pw) {
+                    strncpy(buf[count].user, pw->pw_name, sizeof(buf[count].user) - 1);
+                    buf[count].user[sizeof(buf[count].user) - 1] = '\0';
+                } else {
+                    snprintf(buf[count].user, sizeof(buf[count].user), "%u", uid);
+                }
+                strncpy(buf[count].name, comm, sizeof(buf[count].name) - 1);
+                buf[count].name[sizeof(buf[count].name) - 1] = '\0';
 
-            snprintf(path, sizeof(path), "/proc/%ld/cmdline", pid);
-            FILE *fc = fopen(path, "r");
-            if (fc) {
-                size_t r = fread(buf[count].cmdline, 1,
-                                 sizeof(buf[count].cmdline) - 1, fc);
-                fclose(fc);
-                size_t j = 0;
-                for (size_t i = 0; i < r && j < sizeof(buf[count].cmdline) - 1; i++) {
-                    char c = buf[count].cmdline[i];
-                    if (c == '\0') {
-                        if (j > 0 && buf[count].cmdline[j - 1] != ' ')
-                            buf[count].cmdline[j++] = ' ';
-                    } else {
-                        buf[count].cmdline[j++] = c;
+                snprintf(path, sizeof(path), "/proc/%ld/cmdline", pid);
+                FILE *fc = fopen(path, "r");
+                if (fc) {
+                    size_t r = fread(buf[count].cmdline, 1,
+                                     sizeof(buf[count].cmdline) - 1, fc);
+                    fclose(fc);
+                    size_t j = 0;
+                    for (size_t i = 0; i < r && j < sizeof(buf[count].cmdline) - 1; i++) {
+                        char c = buf[count].cmdline[i];
+                        if (c == '\0') {
+                            if (j > 0 && buf[count].cmdline[j - 1] != ' ')
+                                buf[count].cmdline[j++] = ' ';
+                        } else {
+                            buf[count].cmdline[j++] = c;
+                        }
                     }
+                    if (j > 0 && buf[count].cmdline[j - 1] == ' ')
+                        j--; /* strip trailing space */
+                    buf[count].cmdline[j] = '\0';
+                } else {
+                    buf[count].cmdline[0] = '\0';
                 }
-                if (j > 0 && buf[count].cmdline[j - 1] == ' ')
-                    j--; /* strip trailing space */
-                buf[count].cmdline[j] = '\0';
-            } else {
-                buf[count].cmdline[0] = '\0';
-            }
 
-            if (!match_filter(buf[count].name, buf[count].user)) {
-                fclose(fp);
-                continue;
-            }
+                if (!match_filter(buf[count].name, buf[count].user)) {
+                    fclose(fp);
+                    continue;
+                }
 
-            buf[count].state = state;
-            buf[count].priority = priority;
-            buf[count].nice = niceval;
-            buf[count].vsize = vsize;
-            buf[count].rss = rss;
-            buf[count].rss_percent = 100.0 * (double)rss * (double)page_kb /
-                                   (double)ms.total;
-            buf[count].utime = utime;
-            buf[count].stime = stime;
-            buf[count].cpu_usage = usage;
-            buf[count].cpu_time = (double)(utime + stime) / (double)clk_tck;
-            time_t start_epoch = (time_t)(boot_time +
-                                         (double)starttime / (double)clk_tck);
-            struct tm *tm = localtime(&start_epoch);
-            if (tm)
-                strftime(buf[count].start_time, sizeof(buf[count].start_time),
-                         "%H:%M:%S", tm);
-            else
-                strncpy(buf[count].start_time, "??:??:??",
-                        sizeof(buf[count].start_time));
-            count++;
+                buf[count].state = state;
+                buf[count].priority = priority;
+                buf[count].nice = niceval;
+                buf[count].vsize = vsize;
+                buf[count].rss = rss;
+                buf[count].rss_percent = 100.0 * (double)rss * (double)page_kb /
+                                       (double)ms.total;
+                buf[count].utime = utime;
+                buf[count].stime = stime;
+                buf[count].cpu_usage = usage;
+                buf[count].cpu_time = (double)(utime + stime) / (double)clk_tck;
+                time_t start_epoch = (time_t)(boot_time +
+                                             (double)starttime / (double)clk_tck);
+                struct tm *tm = localtime(&start_epoch);
+                if (tm)
+                    strftime(buf[count].start_time, sizeof(buf[count].start_time),
+                             "%H:%M:%S", tm);
+                else
+                    strncpy(buf[count].start_time, "??:??:??",
+                            sizeof(buf[count].start_time));
+                count++;
+            }
+            fclose(fp);
         }
-        fclose(fp);
     }
     closedir(dir);
     return count;
@@ -431,6 +569,10 @@ int cmp_proc_pid(const void *a, const void *b) {
     const struct process_info *pa = a;
     const struct process_info *pb = b;
     int diff = pa->pid - pb->pid;
+    if (diff == 0) {
+        if (get_thread_mode())
+            diff = pa->tid - pb->tid;
+    }
     if (diff == 0)
         return 0;
     return sort_descending ? -diff : diff;
