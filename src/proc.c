@@ -126,6 +126,15 @@ int read_mem_stats(struct mem_stats *stats) {
         return -1;
     if (read_mem_value("Cached", &stats->cached) < 0)
         return -1;
+    if (read_mem_value("SwapTotal", &stats->swap_total) < 0)
+        return -1;
+    unsigned long long swap_free = 0;
+    if (read_mem_value("SwapFree", &swap_free) < 0)
+        return -1;
+    if (stats->swap_total >= swap_free)
+        stats->swap_used = stats->swap_total - swap_free;
+    else
+        stats->swap_used = 0;
     return 0;
 }
 

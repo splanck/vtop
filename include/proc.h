@@ -20,6 +20,8 @@ struct mem_stats {
     unsigned long long available;
     unsigned long long buffers;
     unsigned long long cached;
+    unsigned long long swap_total;
+    unsigned long long swap_used;
 };
 
 struct misc_stats {
