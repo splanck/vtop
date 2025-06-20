@@ -26,3 +26,12 @@ The `-s` option selects the sort field. Available values are:
 When running the ncurses interface you can press `F3` or `>` to cycle to
 the next sort field and `<` to go back.
 
+Example output with the ncurses interface:
+
+```text
+$ vtop
+load 0.00 0.01 0.05  up 1234s  tasks 1/87  cpu 2.0%  mem 27.3%
+PID      NAME                     STATE  VSIZE    RSS  RSS%  CPU%
+...
+```
+

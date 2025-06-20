@@ -165,6 +165,37 @@ size_t list_processes(struct process_info *buf, size_t max) {
     return count;
 }
 
+int read_misc_stats(struct misc_stats *stats) {
+    FILE *fp = fopen("/proc/loadavg", "r");
+    if (!fp)
+        return -1;
+    double l1 = 0.0, l5 = 0.0, l15 = 0.0;
+    int running = 0, total = 0;
+    if (fscanf(fp, "%lf %lf %lf %d/%d", &l1, &l5, &l15, &running, &total) < 5) {
+        fclose(fp);
+        return -1;
+    }
+    fclose(fp);
+
+    fp = fopen("/proc/uptime", "r");
+    if (!fp)
+        return -1;
+    double up = 0.0;
+    if (fscanf(fp, "%lf", &up) != 1) {
+        fclose(fp);
+        return -1;
+    }
+    fclose(fp);
+
+    stats->load1 = l1;
+    stats->load5 = l5;
+    stats->load15 = l15;
+    stats->uptime = up;
+    stats->running_tasks = running;
+    stats->total_tasks = total;
+    return 0;
+}
+
 int cmp_proc_pid(const void *a, const void *b) {
     const struct process_info *pa = a;
     const struct process_info *pb = b;
