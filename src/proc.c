@@ -36,12 +36,16 @@ static size_t pid_list_count;
 static int sort_descending;
 /* show threads instead of processes */
 static int thread_mode;
+static int show_idle = 1;
 
 void set_sort_descending(int desc) { sort_descending = desc != 0; }
 int get_sort_descending(void) { return sort_descending; }
 
 void set_thread_mode(int on) { thread_mode = on != 0; }
 int get_thread_mode(void) { return thread_mode; }
+
+void set_show_idle(int on) { show_idle = on != 0; }
+int get_show_idle(void) { return show_idle; }
 
 void set_name_filter(const char *substr) {
     if (substr && *substr) {
@@ -378,6 +382,10 @@ size_t list_processes(struct process_info *buf, size_t max) {
 
                     unsigned long long delta = (utime - old_utime) + (stime - old_stime);
                     double usage = 100.0 * (double)delta / (double)total_delta;
+                    if (!show_idle && delta == 0) {
+                        fclose(fp);
+                        continue;
+                    }
 
                     buf[count].pid = (int)pid;
                     buf[count].tid = (int)tid;
@@ -497,6 +505,10 @@ size_t list_processes(struct process_info *buf, size_t max) {
 
                 unsigned long long delta = (utime - old_utime) + (stime - old_stime);
                 double usage = 100.0 * (double)delta / (double)total_delta;
+                if (!show_idle && delta == 0) {
+                    fclose(fp);
+                    continue;
+                }
 
                 buf[count].pid = (int)pid;
                 buf[count].tid = (int)pid;
