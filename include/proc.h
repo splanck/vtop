@@ -22,6 +22,15 @@ struct mem_stats {
     unsigned long long cached;
 };
 
+struct misc_stats {
+    double load1;
+    double load5;
+    double load15;
+    double uptime;
+    int running_tasks;
+    int total_tasks;
+};
+
 struct process_info {
     int pid;
     char name[256];
@@ -40,6 +49,7 @@ struct process_info {
 int read_cpu_stats(struct cpu_stats *stats);
 int read_mem_stats(struct mem_stats *stats);
 size_t list_processes(struct process_info *buf, size_t max);
+int read_misc_stats(struct misc_stats *stats);
 
 /* comparison helpers for sorting */
 int cmp_proc_pid(const void *a, const void *b);

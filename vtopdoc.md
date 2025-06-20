@@ -15,6 +15,12 @@ softirq and steal.
 `MemTotal`, `MemFree` and `MemAvailable`. Values are read line by line
 with simple string matching, allowing the code to remain portable.
 
+## Miscellaneous Statistics
+`read_misc_stats()` parses `/proc/loadavg` and `/proc/uptime` to obtain
+load averages, total running tasks and system uptime. The function fills
+a `struct misc_stats` with three load values, the uptime in seconds and
+the number of running versus total tasks.
+
 ## Running Processes
 `list_processes()` iterates through numeric directories in `/proc`.
 For each process it reads the corresponding `/proc/[pid]/stat` file to
