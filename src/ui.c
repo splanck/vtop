@@ -288,7 +288,13 @@ static void field_manager(void) {
     int sel = 0;
     int h = n + 4;
     int w = 20;
-    WINDOW *win = newwin(h, w, (LINES - h) / 2, (COLS - w) / 2);
+    int startx = COLS > w ? (COLS - w) / 2 : 0;
+    if (startx < 0)
+        startx = 0;
+    int starty = LINES > h ? (LINES - h) / 2 : 0;
+    if (starty < 0)
+        starty = 0;
+    WINDOW *win = newwin(h, w, starty, startx);
     keypad(win, TRUE);
     nodelay(stdscr, FALSE);
     int ch = 0;
@@ -316,7 +322,13 @@ static void field_manager(void) {
 static void show_help(void) {
     const int h = 22;
     const int w = 52;
-    WINDOW *win = newwin(h, w, (LINES - h) / 2, (COLS - w) / 2);
+    int startx = COLS > w ? (COLS - w) / 2 : 0;
+    if (startx < 0)
+        startx = 0;
+    int starty = LINES > h ? (LINES - h) / 2 : 0;
+    if (starty < 0)
+        starty = 0;
+    WINDOW *win = newwin(h, w, starty, startx);
     box(win, 0, 0);
     mvwprintw(win, 1, 2, "Key bindings:");
     mvwprintw(win, 3, 2, "q  Quit");
@@ -363,8 +375,10 @@ static void set_sort(enum sort_field sort) {
 }
 
 int run_ui(unsigned int delay_ms, enum sort_field sort,
-           unsigned int iterations) {
+           unsigned int iterations, int columns) {
     initscr();
+    if (columns > 0)
+        resizeterm(LINES, columns);
     cbreak();
     noecho();
     keypad(stdscr, TRUE);

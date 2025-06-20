@@ -8,7 +8,7 @@ enum sort_field {
 };
 
 int run_ui(unsigned int delay_ms, enum sort_field sort,
-           unsigned int iterations);
+           unsigned int iterations, int columns);
 
 enum mem_unit {
     MEM_UNIT_K,
