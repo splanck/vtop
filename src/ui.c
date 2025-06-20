@@ -27,8 +27,169 @@ static int show_idle = 1;
 static enum sort_field current_sort;
 static int (*compare_procs)(const void *, const void *) = cmp_proc_pid;
 
+enum column_id {
+    COL_PID,
+    COL_TID,
+    COL_USER,
+    COL_CMD,
+    COL_STATE,
+    COL_PRI,
+    COL_NICE,
+    COL_VSIZE,
+    COL_RSS,
+    COL_RSSP,
+    COL_CPUP,
+    COL_TIME,
+    COL_START,
+    COL_COUNT
+};
+
+struct column_def {
+    enum column_id id;
+    const char *title;
+    int width;
+    int left;
+    int enabled;
+};
+
+static struct column_def columns[COL_COUNT] = {
+    {COL_PID,   "PID",     8, 1, 1},
+    {COL_TID,   "TID",     8, 1, 0},
+    {COL_USER,  "USER",    8, 1, 1},
+    {COL_CMD,   "NAME",   25, 1, 1},
+    {COL_STATE, "STATE",   5, 1, 1},
+    {COL_PRI,   "PRI",     4, 0, 1},
+    {COL_NICE,  "NICE",    5, 0, 1},
+    {COL_VSIZE, "VSIZE",   8, 0, 1},
+    {COL_RSS,   "RSS",     5, 0, 1},
+    {COL_RSSP,  "RSS%",    6, 0, 1},
+    {COL_CPUP,  "CPU%",    6, 0, 1},
+    {COL_TIME,  "TIME",    8, 0, 1},
+    {COL_START, "START",   8, 1, 1}
+};
+
+static int column_visible(int idx) {
+    if (columns[idx].id == COL_TID && !show_threads)
+        return 0;
+    return columns[idx].enabled;
+}
+
+static void update_column_titles(void) {
+    columns[COL_CMD].title = show_full_cmd ? "COMMAND" : "NAME";
+}
+
+static void draw_header(int row) {
+    update_column_titles();
+    int x = 0;
+    for (int i = 0; i < COL_COUNT; i++) {
+        if (!column_visible(i))
+            continue;
+        mvprintw(row, x, "%-*s", columns[i].width, columns[i].title);
+        x += columns[i].width + 1;
+    }
+}
+
+static void draw_process_row(int row, const struct process_info *p) {
+    int x = 0;
+    for (int i = 0; i < COL_COUNT; i++) {
+        if (!column_visible(i))
+            continue;
+        switch (columns[i].id) {
+        case COL_PID:
+            mvprintw(row, x, columns[i].left ? "%-*d" : "%*d",
+                     columns[i].width, p->pid);
+            break;
+        case COL_TID:
+            mvprintw(row, x, columns[i].left ? "%-*d" : "%*d",
+                     columns[i].width, p->tid);
+            break;
+        case COL_USER:
+            mvprintw(row, x, columns[i].left ? "%-*s" : "%*s",
+                     columns[i].width, p->user);
+            break;
+        case COL_CMD: {
+            const char *d = show_full_cmd && p->cmdline[0] ? p->cmdline : p->name;
+            mvprintw(row, x, columns[i].left ? "%-*s" : "%*s",
+                     columns[i].width, d);
+            break;
+        }
+        case COL_STATE: {
+            char buf[2] = {p->state, '\0'};
+            mvprintw(row, x, columns[i].left ? "%-*s" : "%*s",
+                     columns[i].width, buf);
+            break;
+        }
+        case COL_PRI:
+            mvprintw(row, x, columns[i].left ? "%-*ld" : "%*ld",
+                     columns[i].width, p->priority);
+            break;
+        case COL_NICE:
+            mvprintw(row, x, columns[i].left ? "%-*ld" : "%*ld",
+                     columns[i].width, p->nice);
+            break;
+        case COL_VSIZE:
+            mvprintw(row, x, columns[i].left ? "%-*llu" : "%*llu",
+                     columns[i].width, p->vsize);
+            break;
+        case COL_RSS:
+            mvprintw(row, x, columns[i].left ? "%-*ld" : "%*ld",
+                     columns[i].width, p->rss);
+            break;
+        case COL_RSSP:
+            mvprintw(row, x, columns[i].left ? "%-*.2f" : "%*.2f",
+                     columns[i].width, p->rss_percent);
+            break;
+        case COL_CPUP:
+            mvprintw(row, x, columns[i].left ? "%-*.2f" : "%*.2f",
+                     columns[i].width, p->cpu_usage);
+            break;
+        case COL_TIME:
+            mvprintw(row, x, columns[i].left ? "%-*.0f" : "%*.0f",
+                     columns[i].width, p->cpu_time);
+            break;
+        case COL_START:
+            mvprintw(row, x, columns[i].left ? "%-*s" : "%*s",
+                     columns[i].width, p->start_time);
+            break;
+        default:
+            break;
+        }
+        x += columns[i].width + 1;
+    }
+}
+
+static void field_manager(void) {
+    const int n = COL_COUNT;
+    int sel = 0;
+    int h = n + 4;
+    int w = 20;
+    WINDOW *win = newwin(h, w, (LINES - h) / 2, (COLS - w) / 2);
+    keypad(win, TRUE);
+    nodelay(stdscr, FALSE);
+    int ch = 0;
+    while (ch != '\n' && ch != 'q' && ch != 27) {
+        box(win, 0, 0);
+        mvwprintw(win, 1, 2, "Toggle fields:");
+        for (int i = 0; i < n; i++) {
+            mvwprintw(win, i + 2, 2, "[%c] %s", columns[i].enabled ? 'x' : ' ',
+                     columns[i].title);
+        }
+        wmove(win, sel + 2, 1);
+        wrefresh(win);
+        ch = wgetch(win);
+        if (ch == KEY_UP && sel > 0)
+            sel--;
+        else if (ch == KEY_DOWN && sel < n - 1)
+            sel++;
+        else if (ch == ' ')
+            columns[sel].enabled = !columns[sel].enabled;
+    }
+    delwin(win);
+    nodelay(stdscr, TRUE);
+}
+
 static void show_help(void) {
-    const int h = 19;
+    const int h = 20;
     const int w = 52;
     WINDOW *win = newwin(h, w, (LINES - h) / 2, (COLS - w) / 2);
     box(win, 0, 0);
@@ -45,8 +206,9 @@ static void show_help(void) {
     mvwprintw(win, 12, 2, "a       Toggle full command");
     mvwprintw(win, 13, 2, "H       Toggle thread view");
     mvwprintw(win, 14, 2, "i       Toggle idle processes");
-    mvwprintw(win, 15, 2, "SPACE    Pause/resume");
-    mvwprintw(win, 16, 2, "h       Show this help");
+    mvwprintw(win, 15, 2, "f       Field manager");
+    mvwprintw(win, 16, 2, "SPACE    Pause/resume");
+    mvwprintw(win, 17, 2, "h       Show this help");
     mvwprintw(win, h - 2, 2, "Press any key to return");
     wrefresh(win);
     nodelay(stdscr, FALSE);
@@ -190,33 +352,9 @@ int run_ui(unsigned int delay_ms, enum sort_field sort,
             mvprintw(1, 0, "%s", cbuf);
             row = 2;
         }
-        mvprintw(row, 0, "%s",
-                 show_full_cmd ?
-                     (show_threads ?
-                          "PID      TID      USER     COMMAND                  STATE PRI  NICE  VSIZE    RSS  RSS%  CPU%   TIME     START" :
-                          "PID      USER     COMMAND                  STATE PRI  NICE  VSIZE    RSS  RSS%  CPU%   TIME     START") :
-                     (show_threads ?
-                          "PID      TID      USER     NAME                     STATE PRI  NICE  VSIZE    RSS  RSS%  CPU%   TIME     START" :
-                          "PID      USER     NAME                     STATE PRI  NICE  VSIZE    RSS  RSS%  CPU%   TIME     START"));
+        draw_header(row);
         for (size_t i = 0; i < count && i < LINES - row - 2; i++) {
-            const char *disp = show_full_cmd && procs[i].cmdline[0] ?
-                                procs[i].cmdline : procs[i].name;
-            if (show_threads)
-                mvprintw(i + row + 1, 0,
-                         "%-8d %-8d %-8s %-25s %c %4ld %5ld %8llu %5ld %6.2f %6.2f %8.0f %-8s",
-                         procs[i].pid, procs[i].tid, procs[i].user, disp, procs[i].state,
-                         procs[i].priority, procs[i].nice,
-                         procs[i].vsize, procs[i].rss,
-                         procs[i].rss_percent, procs[i].cpu_usage,
-                         procs[i].cpu_time, procs[i].start_time);
-            else
-                mvprintw(i + row + 1, 0,
-                         "%-8d %-8s %-25s %c %4ld %5ld %8llu %5ld %6.2f %6.2f %8.0f %-8s",
-                         procs[i].pid, procs[i].user, disp, procs[i].state,
-                         procs[i].priority, procs[i].nice,
-                         procs[i].vsize, procs[i].rss,
-                         procs[i].rss_percent, procs[i].cpu_usage,
-                         procs[i].cpu_time, procs[i].start_time);
+            draw_process_row(i + row + 1, &procs[i]);
         }
         refresh();
         usleep(interval * 1000);
@@ -300,6 +438,8 @@ int run_ui(unsigned int delay_ms, enum sort_field sort,
         } else if (ch == 'i') {
             show_idle = !show_idle;
             set_show_idle(show_idle);
+        } else if (ch == 'f') {
+            field_manager();
         } else if (ch == ' ') {
             paused = !paused;
         } else if (ch == 'h') {
