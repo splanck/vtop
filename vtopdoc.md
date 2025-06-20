@@ -77,7 +77,7 @@ priority, nice value, virtual memory size, resident set size,
 memory usage percentage, CPU usage, total CPU time and the process
 start time.
 In the interactive interface press `F3` or `>` to cycle to the next sort
-field and `<` to go back.
+field and `<` to go back. Use `F4` or `o` to toggle the sort order.
 
 Process management shortcuts are also available:
 
@@ -85,6 +85,7 @@ Process management shortcuts are also available:
 - `r` &ndash; prompt for a PID and new nice value to adjust process priority.
 - `c` &ndash; toggle per-core CPU usage display.
 - `a` &ndash; toggle between the short name and full command line.
+- `F4`/`o` &ndash; change the sort direction.
 - `h` &ndash; display a help window showing available shortcuts.
 
 Use caution when running with elevated privileges because killing or
