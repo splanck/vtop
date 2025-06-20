@@ -1,6 +1,8 @@
 # vtop
 A modern top replacement for UNIX.
 
+For detailed documentation see [vtopdoc.md](vtopdoc.md).
+
 ## Building
 Compile with gcc:
 ```sh
