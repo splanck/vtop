@@ -43,11 +43,15 @@ struct process_info {
     long rss;
     /* RSS as a percentage of total system memory */
     double rss_percent;
-    /* Previous user and system CPU times in clock ticks */
-    unsigned long long prev_utime;
-    unsigned long long prev_stime;
+    /* User and system CPU times in clock ticks */
+    unsigned long long utime;
+    unsigned long long stime;
     /* Calculated CPU usage since last update (percentage) */
     double cpu_usage;
+    /* Total CPU time in seconds */
+    double cpu_time;
+    /* Process start time as HH:MM:SS */
+    char start_time[16];
 };
 
 int read_cpu_stats(struct cpu_stats *stats);

@@ -5,6 +5,7 @@
 #include <dirent.h>
 #include <unistd.h>
 #include <pwd.h>
+#include <time.h>
 
 /* store previous per-process CPU times between calls */
 #define MAX_PREV 1024
@@ -105,6 +106,18 @@ size_t list_processes(struct process_info *buf, size_t max) {
         return 0;
     struct dirent *ent;
     size_t count = 0;
+    long clk_tck = sysconf(_SC_CLK_TCK);
+    if (clk_tck <= 0)
+        clk_tck = 100;
+
+    FILE *upt = fopen("/proc/uptime", "r");
+    double up_secs = 0.0;
+    if (upt) {
+        fscanf(upt, "%lf", &up_secs);
+        fclose(upt);
+    }
+    time_t now = time(NULL);
+    double boot_time = (double)now - up_secs;
     while ((ent = readdir(dir)) != NULL && count < max) {
         char *endptr;
         long pid = strtol(ent->d_name, &endptr, 10);
@@ -117,15 +130,15 @@ size_t list_processes(struct process_info *buf, size_t max) {
             continue;
         char line[1024];
         if (fgets(line, sizeof(line), fp)) {
-            /* pid (comm) state ... utime stime ... vsize rss */
+            /* pid (comm) state ... utime stime ... starttime vsize rss */
             char comm[256];
             char state;
-            unsigned long long utime, stime;
+            unsigned long long utime, stime, starttime;
             unsigned long long vsize;
             long rss;
             sscanf(line,
-                   "%*d (%255[^)]) %c %*s %*s %*s %*s %*s %*s %*s %*s %*s %*s %llu %llu %*s %*s %*s %*s %*s %*s %*s %llu %ld",
-                   comm, &state, &utime, &stime, &vsize, &rss);
+                   "%*d (%255[^)]) %c %*s %*s %*s %*s %*s %*s %*s %*s %*s %*s %llu %llu %*s %*s %*s %*s %*s %*s %llu %llu %ld",
+                   comm, &state, &utime, &stime, &starttime, &vsize, &rss);
 
             unsigned int uid = 0;
             snprintf(path, sizeof(path), "/proc/%ld/status", pid);
@@ -177,9 +190,19 @@ size_t list_processes(struct process_info *buf, size_t max) {
             buf[count].rss = rss;
             buf[count].rss_percent = 100.0 * (double)rss * (double)page_kb /
                                    (double)ms.total;
-            buf[count].prev_utime = utime;
-            buf[count].prev_stime = stime;
+            buf[count].utime = utime;
+            buf[count].stime = stime;
             buf[count].cpu_usage = usage;
+            buf[count].cpu_time = (double)(utime + stime) / (double)clk_tck;
+            time_t start_epoch = (time_t)(boot_time +
+                                         (double)starttime / (double)clk_tck);
+            struct tm *tm = localtime(&start_epoch);
+            if (tm)
+                strftime(buf[count].start_time, sizeof(buf[count].start_time),
+                         "%H:%M:%S", tm);
+            else
+                strncpy(buf[count].start_time, "??:??:??",
+                        sizeof(buf[count].start_time));
             count++;
         }
         fclose(fp);

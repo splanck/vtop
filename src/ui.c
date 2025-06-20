@@ -81,12 +81,14 @@ int run_ui(unsigned int delay_ms, enum sort_field sort) {
                  misc.running_tasks, misc.total_tasks, cpu_usage, mem_usage,
                  interval / 1000.0);
         mvprintw(1, 0, "%s",
-                 "PID      USER     NAME                     STATE  VSIZE    RSS  RSS%  CPU%");
+                 "PID      USER     NAME                     STATE  VSIZE    RSS  RSS%  CPU%   TIME     START");
         for (size_t i = 0; i < count && i < LINES - 3; i++) {
-            mvprintw(i + 2, 0, "%-8d %-8s %-25s %c %8llu %5ld %6.2f %6.2f",
+            mvprintw(i + 2, 0,
+                     "%-8d %-8s %-25s %c %8llu %5ld %6.2f %6.2f %8.0f %-8s",
                      procs[i].pid, procs[i].user, procs[i].name, procs[i].state,
                      procs[i].vsize, procs[i].rss,
-                     procs[i].rss_percent, procs[i].cpu_usage);
+                     procs[i].rss_percent, procs[i].cpu_usage,
+                     procs[i].cpu_time, procs[i].start_time);
         }
         refresh();
         usleep(interval * 1000);

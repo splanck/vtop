@@ -61,7 +61,8 @@ vtop -s cpu       # sort processes by CPU usage
 ```
 
 The interactive display lists PID, USER, command name, state, virtual
-memory size, resident set size, memory usage percentage and CPU usage.
+memory size, resident set size, memory usage percentage, CPU usage,
+total CPU time and the process start time.
 In the interactive interface press `F3` or `>` to cycle to the next sort
 field and `<` to go back.
 

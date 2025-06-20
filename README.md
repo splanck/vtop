@@ -33,7 +33,7 @@ the next sort field and `<` to go back.
 
 Additional shortcuts:
 
-- Press `k` to send `SIGTERM` to a process. vtop will prompt for the PID.
+- Press `k` to send `SIGTERM` to a process. vtop will prompt for the PID      NAME                     STATE  VSIZE    RSS  RSS%  CPU%   TIME     START
 - Press `r` to change a process's nice value. You will be asked for the
   PID and the new nice level.
 - Use `+` and `-` to increase or decrease the refresh delay while running.
@@ -47,7 +47,7 @@ Example output with the ncurses interface:
 ```text
 $ vtop
 load 0.00 0.01 0.05  up 1234s  tasks 1/87  cpu 2.0%  mem 27.3%
-PID      NAME                     STATE  VSIZE    RSS  RSS%  CPU%
+PID      NAME                     STATE  VSIZE    RSS  RSS%  CPU%   TIME     START
 ...
 ```
 
