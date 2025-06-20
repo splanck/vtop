@@ -37,8 +37,8 @@ static void usage(const char *prog) {
 
 static int run_batch(unsigned int delay_ms, enum sort_field sort,
                      unsigned int iterations) {
-    const size_t MAX_PROC = 256;
-    struct process_info procs[MAX_PROC];
+    struct process_info *procs = NULL;
+    size_t proc_cap = 0;
     struct cpu_stats cs;
     struct mem_stats ms;
     struct misc_stats misc;
@@ -64,7 +64,15 @@ static int run_batch(unsigned int delay_ms, enum sort_field sort,
         if (read_mem_stats(&ms) != 0)
             memset(&ms, 0, sizeof(ms));
         read_misc_stats(&misc);
-        size_t count = list_processes(procs, MAX_PROC);
+        size_t need = count_processes();
+        if (need > proc_cap) {
+            struct process_info *tmp = realloc(procs, need * sizeof(*procs));
+            if (tmp) {
+                procs = tmp;
+                proc_cap = need;
+            }
+        }
+        size_t count = list_processes(procs, proc_cap);
         qsort(procs, count, sizeof(struct process_info), compare);
         double mem_usage = 0.0;
         if (ms.total > 0)
@@ -96,6 +104,7 @@ static int run_batch(unsigned int delay_ms, enum sort_field sort,
         usleep(delay_ms * 1000);
         iter++;
     }
+    free(procs);
     return 0;
 }
 

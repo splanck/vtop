@@ -9,7 +9,6 @@
 #include <unistd.h>
 #include <signal.h>
 
-#define MAX_PROC 256
 #define MIN_DELAY_MS 100
 #define MAX_DELAY_MS 10000
 
@@ -390,7 +389,8 @@ int run_ui(unsigned int delay_ms, enum sort_field sort,
         init_pair(CP_RUNNING, COLOR_GREEN, -1);
     }
 
-    struct process_info procs[MAX_PROC];
+    struct process_info *procs = NULL;
+    size_t proc_cap = 0;
     struct cpu_stats cs;
     struct mem_stats ms;
     struct misc_stats misc;
@@ -463,8 +463,17 @@ int run_ui(unsigned int delay_ms, enum sort_field sort,
         if (!paused)
             read_misc_stats(&misc);
 
-        if (!paused)
-            count = list_processes(procs, MAX_PROC);
+        if (!paused) {
+            size_t need = count_processes();
+            if (need > proc_cap) {
+                struct process_info *tmp = realloc(procs, need * sizeof(*procs));
+                if (tmp) {
+                    procs = tmp;
+                    proc_cap = need;
+                }
+            }
+            count = list_processes(procs, proc_cap);
+        }
         qsort(procs, count, sizeof(struct process_info), compare_procs);
         erase();
         char fbuf[128] = "";
@@ -606,6 +615,7 @@ int run_ui(unsigned int delay_ms, enum sort_field sort,
     free(core_usage);
     free(core_prev_total);
     free(core_prev_idle);
+    free(procs);
     ui_save_config(interval, current_sort);
     return 0;
 }

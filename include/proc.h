@@ -81,6 +81,7 @@ int read_cpu_stats(struct cpu_stats *stats);
 size_t get_cpu_core_count(void);
 const struct cpu_core_stats *get_cpu_core_stats(void);
 int read_mem_stats(struct mem_stats *stats);
+size_t count_processes(void);
 size_t list_processes(struct process_info *buf, size_t max);
 int read_misc_stats(struct misc_stats *stats);
 
