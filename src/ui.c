@@ -45,11 +45,11 @@ int run_ui(unsigned int delay_ms, enum sort_field sort) {
         size_t count = list_processes(procs, MAX_PROC);
         qsort(procs, count, sizeof(struct process_info), compare_procs);
         erase();
-        mvprintw(0, 0, "PID      NAME                     STATE  VSIZE    RSS");
+        mvprintw(0, 0, "PID      NAME                     STATE  VSIZE    RSS   CPU%%");
         for (size_t i = 0; i < count && i < LINES - 2; i++) {
-            mvprintw(i + 1, 0, "%-8d %-25s %c %8llu %5ld",
+            mvprintw(i + 1, 0, "%-8d %-25s %c %8llu %5ld %6.2f",
                      procs[i].pid, procs[i].name, procs[i].state,
-                     procs[i].vsize, procs[i].rss);
+                     procs[i].vsize, procs[i].rss, procs[i].cpu_usage);
         }
         refresh();
         usleep(delay_ms * 1000);

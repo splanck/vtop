@@ -28,6 +28,11 @@ struct process_info {
     char state;
     unsigned long long vsize;
     long rss;
+    /* Previous user and system CPU times in clock ticks */
+    unsigned long long prev_utime;
+    unsigned long long prev_stime;
+    /* Calculated CPU usage since last update (percentage) */
+    double cpu_usage;
 };
 
 int read_cpu_stats(struct cpu_stats *stats);
