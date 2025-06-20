@@ -244,14 +244,18 @@ static void draw_process_row(int row, const struct process_info *p) {
             mvprintw(row, x, columns[i].left ? "%-*ld" : "%*ld",
                      columns[i].width, p->nice);
             break;
-        case COL_VSIZE:
-            mvprintw(row, x, columns[i].left ? "%-*llu" : "%*llu",
-                     columns[i].width, p->vsize);
+        case COL_VSIZE: {
+            double vsz = scale_kb((p->vsize / 1024), proc_unit);
+            mvprintw(row, x, columns[i].left ? "%-*.1f" : "%*.1f",
+                     columns[i].width, vsz);
             break;
-        case COL_RSS:
-            mvprintw(row, x, columns[i].left ? "%-*ld" : "%*ld",
-                     columns[i].width, p->rss);
+        }
+        case COL_RSS: {
+            double rss = scale_kb((unsigned long long)p->rss, proc_unit);
+            mvprintw(row, x, columns[i].left ? "%-*.1f" : "%*.1f",
+                     columns[i].width, rss);
             break;
+        }
         case COL_RSSP:
             mvprintw(row, x, columns[i].left ? "%-*.2f" : "%*.2f",
                      columns[i].width, p->rss_percent);
@@ -460,12 +464,15 @@ int run_ui(unsigned int delay_ms, enum sort_field sort,
             strncat(fbuf, " user=", sizeof(fbuf) - strlen(fbuf) - 1);
             strncat(fbuf, uf, sizeof(fbuf) - strlen(fbuf) - 1);
         }
+        double swap_u = scale_kb(ms.swap_used, summary_unit);
+        double swap_t = scale_kb(ms.swap_total, summary_unit);
+        const char *unit = mem_unit_suffix(summary_unit);
         mvprintw(0, 0,
-                 "load %.2f %.2f %.2f  up %.0fs  tasks %d/%d  cpu %5.1f%% us %.1f%% sy %.1f%% id %.1f%%  mem %5.1f%%  swap %llu/%llu %.1f%%  intv %.1fs%s%s",
+                 "load %.2f %.2f %.2f  up %.0fs  tasks %d/%d  cpu %5.1f%% us %.1f%% sy %.1f%% id %.1f%%  mem %5.1f%%  swap %.0f/%.0f%s %.1f%%  intv %.1fs%s%s",
                  misc.load1, misc.load5, misc.load15, misc.uptime,
                  misc.running_tasks, misc.total_tasks, cpu_usage,
                  cs.user_percent, cs.system_percent, cs.idle_percent,
-                 mem_usage, ms.swap_used, ms.swap_total, swap_usage,
+                 mem_usage, swap_u, swap_t, unit, swap_usage,
                  interval / 1000.0, paused ? " [PAUSED]" : "", fbuf);
         int row = 1;
         if (show_cores && core_count > 0) {

@@ -432,8 +432,9 @@ size_t list_processes(struct process_info *buf, size_t max) {
                     buf[count].priority = priority;
                     buf[count].nice = niceval;
                     buf[count].vsize = vsize;
-                    buf[count].rss = rss;
-                    buf[count].rss_percent = 100.0 * (double)rss * (double)page_kb /
+                    long rss_kb = rss * page_kb;
+                    buf[count].rss = rss_kb;
+                    buf[count].rss_percent = 100.0 * (double)rss_kb /
                                            (double)ms.total;
                     buf[count].utime = utime;
                     buf[count].stime = stime;
@@ -555,8 +556,9 @@ size_t list_processes(struct process_info *buf, size_t max) {
                 buf[count].priority = priority;
                 buf[count].nice = niceval;
                 buf[count].vsize = vsize;
-                buf[count].rss = rss;
-                buf[count].rss_percent = 100.0 * (double)rss * (double)page_kb /
+                long rss_kb = rss * page_kb;
+                buf[count].rss = rss_kb;
+                buf[count].rss_percent = 100.0 * (double)rss_kb /
                                        (double)ms.total;
                 buf[count].utime = utime;
                 buf[count].stime = stime;

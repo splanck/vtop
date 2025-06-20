@@ -31,7 +31,10 @@ The `-s` option selects the sort field. Available values are:
 The `-b`/`--batch` option runs without the ncurses interface and prints
 plain text updates. Use `-n N` to limit the number of refresh cycles;
 `0` runs indefinitely. The `-p` option restricts the output to the
-comma-separated list of PIDs given.
+comma-separated list of PIDs given. The `-E` and `-e` options control the
+units used when displaying memory. Both accept one of `k`, `m`, `g`, `t`,
+`p` or `e` for kilobytes through exabytes. `-E` affects the summary line
+while `-e` scales per-process values.
 
 When running the ncurses interface you can press `F3` or `>` to cycle to
 the next sort field and `<` to go back.

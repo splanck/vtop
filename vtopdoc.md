@@ -59,6 +59,9 @@ monitoring tools without requiring additional dependencies.
 
 `vtop` accepts a few options similar to classic `top`.
 
+- `-E UNIT` &mdash; Set memory units for the summary line.
+- `-e UNIT` &mdash; Set memory units for per-process values.
+
 - `-d SECS` &mdash; Set the refresh delay in seconds. The default is
   `3` seconds just like `top`.
 - `-s COL` &mdash; Choose the column to sort by. Supported values are
