@@ -18,6 +18,28 @@ static unsigned long long prev_idle;
 static enum sort_field current_sort;
 static int (*compare_procs)(const void *, const void *) = cmp_proc_pid;
 
+static void show_help(void) {
+    const int h = 12;
+    const int w = 48;
+    WINDOW *win = newwin(h, w, (LINES - h) / 2, (COLS - w) / 2);
+    box(win, 0, 0);
+    mvwprintw(win, 1, 2, "Key bindings:");
+    mvwprintw(win, 3, 2, "q  Quit");
+    mvwprintw(win, 4, 2, "F3/>/<  Change sort field");
+    mvwprintw(win, 5, 2, "+/-     Adjust refresh delay");
+    mvwprintw(win, 6, 2, "/       Filter by command name");
+    mvwprintw(win, 7, 2, "u       Filter by user");
+    mvwprintw(win, 8, 2, "k       Kill a process");
+    mvwprintw(win, 9, 2, "r       Renice a process");
+    mvwprintw(win, 10, 2, "h       Show this help");
+    mvwprintw(win, h - 2, 2, "Press any key to return");
+    wrefresh(win);
+    nodelay(stdscr, FALSE);
+    wgetch(win);
+    nodelay(stdscr, TRUE);
+    delwin(win);
+}
+
 static void set_sort(enum sort_field sort) {
     current_sort = sort;
     switch (sort) {
@@ -170,6 +192,8 @@ int run_ui(unsigned int delay_ms, enum sort_field sort) {
             noecho();
             curs_set(0);
             nodelay(stdscr, TRUE);
+        } else if (ch == 'h') {
+            show_help();
         }
     }
     endwin();
