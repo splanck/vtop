@@ -335,6 +335,29 @@ size_t list_processes(struct process_info *buf, size_t max) {
             strncpy(buf[count].name, comm, sizeof(buf[count].name) - 1);
             buf[count].name[sizeof(buf[count].name) - 1] = '\0';
 
+            snprintf(path, sizeof(path), "/proc/%ld/cmdline", pid);
+            FILE *fc = fopen(path, "r");
+            if (fc) {
+                size_t r = fread(buf[count].cmdline, 1,
+                                 sizeof(buf[count].cmdline) - 1, fc);
+                fclose(fc);
+                size_t j = 0;
+                for (size_t i = 0; i < r && j < sizeof(buf[count].cmdline) - 1; i++) {
+                    char c = buf[count].cmdline[i];
+                    if (c == '\0') {
+                        if (j > 0 && buf[count].cmdline[j - 1] != ' ')
+                            buf[count].cmdline[j++] = ' ';
+                    } else {
+                        buf[count].cmdline[j++] = c;
+                    }
+                }
+                if (j > 0 && buf[count].cmdline[j - 1] == ' ')
+                    j--; /* strip trailing space */
+                buf[count].cmdline[j] = '\0';
+            } else {
+                buf[count].cmdline[0] = '\0';
+            }
+
             if (!match_filter(buf[count].name, buf[count].user)) {
                 fclose(fp);
                 continue;
