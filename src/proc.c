@@ -194,33 +194,44 @@ int read_cpu_stats(struct cpu_stats *stats) {
     static unsigned long long prev_softirq = 0;
     static unsigned long long prev_steal = 0;
 
-    unsigned long long cur_user = stats->user + stats->nice;
-    unsigned long long cur_system = stats->system + stats->irq +
-                                    stats->softirq + stats->steal;
-    unsigned long long cur_idle = stats->idle + stats->iowait;
-
-    unsigned long long prev_user_total = prev_user + prev_nice;
-    unsigned long long prev_system_total = prev_system + prev_irq +
-                                           prev_softirq + prev_steal;
-    unsigned long long prev_idle_total = prev_idle + prev_iowait;
-
-    unsigned long long cur_total = cur_user + cur_system + cur_idle;
-    unsigned long long prev_total = prev_user_total + prev_system_total +
-                                    prev_idle_total;
+    unsigned long long cur_total = stats->user + stats->nice + stats->system +
+                                   stats->idle + stats->iowait + stats->irq +
+                                   stats->softirq + stats->steal;
+    unsigned long long prev_total = prev_user + prev_nice + prev_system +
+                                    prev_idle + prev_iowait + prev_irq +
+                                    prev_softirq + prev_steal;
     unsigned long long d_total = cur_total - prev_total;
 
-    double u_perc = 0.0, s_perc = 0.0, i_perc = 0.0;
+    unsigned long long d_user = stats->user - prev_user;
+    unsigned long long d_nice = stats->nice - prev_nice;
+    unsigned long long d_system = stats->system - prev_system;
+    unsigned long long d_idle = stats->idle - prev_idle;
+    unsigned long long d_iowait = stats->iowait - prev_iowait;
+    unsigned long long d_irq = stats->irq - prev_irq;
+    unsigned long long d_softirq = stats->softirq - prev_softirq;
+    unsigned long long d_steal = stats->steal - prev_steal;
+
+    double u_perc = 0.0, n_perc = 0.0, s_perc = 0.0, i_perc = 0.0;
+    double iw_perc = 0.0, ir_perc = 0.0, sir_perc = 0.0, st_perc = 0.0;
     if (d_total > 0) {
-        u_perc = 100.0 * (double)(cur_user - prev_user_total) / (double)d_total;
-        s_perc = 100.0 * (double)(cur_system - prev_system_total) /
-                 (double)d_total;
-        i_perc = 100.0 * (double)(cur_idle - prev_idle_total) /
-                 (double)d_total;
+        u_perc = 100.0 * (double)d_user / (double)d_total;
+        n_perc = 100.0 * (double)d_nice / (double)d_total;
+        s_perc = 100.0 * (double)d_system / (double)d_total;
+        i_perc = 100.0 * (double)d_idle / (double)d_total;
+        iw_perc = 100.0 * (double)d_iowait / (double)d_total;
+        ir_perc = 100.0 * (double)d_irq / (double)d_total;
+        sir_perc = 100.0 * (double)d_softirq / (double)d_total;
+        st_perc = 100.0 * (double)d_steal / (double)d_total;
     }
 
-    stats->user_percent = u_perc;
-    stats->system_percent = s_perc;
-    stats->idle_percent = i_perc;
+    stats->user_percent = u_perc + n_perc;
+    stats->nice_percent = n_perc;
+    stats->system_percent = s_perc + ir_perc + sir_perc + st_perc;
+    stats->idle_percent = i_perc + iw_perc;
+    stats->iowait_percent = iw_perc;
+    stats->irq_percent = ir_perc;
+    stats->softirq_percent = sir_perc;
+    stats->steal_percent = st_perc;
 
     prev_user = stats->user;
     prev_nice = stats->nice;

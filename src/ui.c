@@ -491,10 +491,12 @@ int run_ui(unsigned int delay_ms, enum sort_field sort,
         double swap_t = scale_kb(ms.swap_total, summary_unit);
         const char *unit = mem_unit_suffix(summary_unit);
         mvprintw(0, 0,
-                 "load %.2f %.2f %.2f  up %.0fs  tasks %d/%d  cpu %5.1f%% us %.1f%% sy %.1f%% id %.1f%%  mem %5.1f%%  swap %.0f/%.0f%s %.1f%%  intv %.1fs%s%s",
+                 "load %.2f %.2f %.2f  up %.0fs  tasks %d/%d  cpu %5.1f%% us %.1f%% sy %.1f%% ni %.1f%% id %.1f%% wa %.1f%% hi %.1f%% si %.1f%% st %.1f%%  mem %5.1f%%  swap %.0f/%.0f%s %.1f%%  intv %.1fs%s%s",
                  misc.load1, misc.load5, misc.load15, misc.uptime,
                  misc.running_tasks, misc.total_tasks, cpu_usage,
-                 cs.user_percent, cs.system_percent, cs.idle_percent,
+                 cs.user_percent - cs.nice_percent, cs.system_percent - cs.irq_percent - cs.softirq_percent - cs.steal_percent,
+                 cs.nice_percent, cs.idle_percent - cs.iowait_percent,
+                 cs.iowait_percent, cs.irq_percent, cs.softirq_percent, cs.steal_percent,
                  mem_usage, swap_u, swap_t, unit, swap_usage,
                  interval / 1000.0, paused ? " [PAUSED]" : "", fbuf);
         int row = 1;

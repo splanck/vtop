@@ -14,8 +14,13 @@ struct cpu_stats {
     unsigned long long steal;
     /* Percentages since the last call to read_cpu_stats */
     double user_percent;
+    double nice_percent;
     double system_percent;
     double idle_percent;
+    double iowait_percent;
+    double irq_percent;
+    double softirq_percent;
+    double steal_percent;
 };
 
 struct cpu_core_stats {
