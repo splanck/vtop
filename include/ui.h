@@ -3,9 +3,8 @@
 
 enum sort_field {
     SORT_PID,
-    SORT_NAME,
-    SORT_VSIZE,
-    SORT_RSS
+    SORT_CPU,
+    SORT_MEM
 };
 
 int run_ui(unsigned int delay_ms, enum sort_field sort);

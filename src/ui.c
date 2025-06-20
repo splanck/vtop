@@ -9,25 +9,21 @@
 #define MAX_PROC 256
 
 static enum sort_field current_sort;
+static int (*compare_procs)(const void *, const void *) = cmp_proc_pid;
 
-static int compare_procs(const void *a, const void *b) {
-    const struct process_info *pa = a;
-    const struct process_info *pb = b;
-    switch (current_sort) {
+static void set_sort(enum sort_field sort) {
+    current_sort = sort;
+    switch (sort) {
     case SORT_PID:
-        return pa->pid - pb->pid;
-    case SORT_NAME:
-        return strcmp(pa->name, pb->name);
-    case SORT_VSIZE:
-        if (pa->vsize < pb->vsize) return 1;
-        if (pa->vsize > pb->vsize) return -1;
-        return 0;
-    case SORT_RSS:
-        if (pa->rss < pb->rss) return 1;
-        if (pa->rss > pb->rss) return -1;
-        return 0;
+        compare_procs = cmp_proc_pid;
+        break;
+    case SORT_CPU:
+        compare_procs = cmp_proc_cpu;
+        break;
+    case SORT_MEM:
+        compare_procs = cmp_proc_mem;
+        break;
     }
-    return 0;
 }
 
 int run_ui(unsigned int delay_ms, enum sort_field sort) {
@@ -39,7 +35,7 @@ int run_ui(unsigned int delay_ms, enum sort_field sort) {
 
     struct process_info procs[MAX_PROC];
 
-    current_sort = sort;
+    set_sort(sort);
     int ch = 0;
     while (ch != 'q') {
         size_t count = list_processes(procs, MAX_PROC);
@@ -55,6 +51,17 @@ int run_ui(unsigned int delay_ms, enum sort_field sort) {
         refresh();
         usleep(delay_ms * 1000);
         ch = getch();
+        if (ch == KEY_F(3) || ch == '>') {
+            if (current_sort == SORT_MEM)
+                set_sort(SORT_PID);
+            else
+                set_sort(current_sort + 1);
+        } else if (ch == '<') {
+            if (current_sort == SORT_PID)
+                set_sort(SORT_MEM);
+            else
+                set_sort(current_sort - 1);
+        }
     }
     endwin();
     return 0;
