@@ -34,12 +34,13 @@ the number of running versus total tasks.
 
 ## Running Processes
 `list_processes()` iterates through numeric directories in `/proc`.
-For each process it reads the corresponding `/proc/[pid]/stat` file to
-extract the command name, state, virtual size and resident set size.
-Only a subset of the fields is parsed, keeping the parser short and
-robust. The real user ID is read from `/proc/[pid]/status` and
-resolved to a username via `getpwuid()` so the UI can display the
-process owner.
+For each process it reads `/proc/[pid]/stat` for basic metrics and
+`/proc/[pid]/cmdline` to obtain the full argument list. The command line
+is stored as a space separated string along with the short command name,
+state, virtual size and resident set size. Only a subset of the fields
+is parsed, keeping the parser short and robust. The real user ID is read
+from `/proc/[pid]/status` and resolved to a username via `getpwuid()` so
+the UI can display the process owner.
 
 `list_processes()` also reports the resident set size as a percentage of
 total system memory. The value is computed with
@@ -83,6 +84,7 @@ Process management shortcuts are also available:
 - `k` &ndash; prompt for a PID and send `SIGTERM` to that process.
 - `r` &ndash; prompt for a PID and new nice value to adjust process priority.
 - `c` &ndash; toggle per-core CPU usage display.
+- `a` &ndash; toggle between the short name and full command line.
 - `h` &ndash; display a help window showing available shortcuts.
 
 Use caution when running with elevated privileges because killing or

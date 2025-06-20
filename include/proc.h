@@ -55,6 +55,8 @@ struct process_info {
     /* Short username resolved from uid */
     char user[32];
     char name[256];
+    /* Space separated arguments from /proc/[pid]/cmdline */
+    char cmdline[256];
     char state;
     long priority;
     long nice;
