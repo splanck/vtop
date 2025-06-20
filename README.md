@@ -35,6 +35,7 @@ comma-separated list of PIDs given. The `-E` and `-e` options control the
 units used when displaying memory. Both accept one of `k`, `m`, `g`, `t`,
 `p` or `e` for kilobytes through exabytes. `-E` affects the summary line
 while `-e` scales per-process values.
+Use `-m N` to limit the number of displayed tasks.
 The `-w` option allows overriding the screen width used by the ncurses
 layout. When the specified width is smaller than the default, columns are
 truncated to fit.

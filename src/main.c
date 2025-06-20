@@ -8,6 +8,9 @@
 #include "ui.h"
 #include "proc.h"
 
+/* maximum number of process entries to display (0 = unlimited) */
+static size_t max_entries;
+
 static enum mem_unit parse_unit(const char *arg) {
     if (!arg || !*arg)
         return MEM_UNIT_K;
@@ -24,7 +27,7 @@ static enum mem_unit parse_unit(const char *arg) {
 }
 
 static void usage(const char *prog) {
-    printf("Usage: %s [-d seconds] [-s column] [-E unit] [-e unit] [-b iter] [-n iter] [-p pid,...] [-w cols]\n", prog);
+    printf("Usage: %s [-d seconds] [-s column] [-E unit] [-e unit] [-b iter] [-n iter] [-m max] [-p pid,...] [-w cols]\n", prog);
     printf("  -d, --delay SECS   Refresh delay in seconds (default 3)\n");
     printf("  -s, --sort  COL    Sort column: pid,cpu,mem,time,pri (default pid)\n");
     printf("  -E, --scale-summary-mem UNIT  Memory units for summary (k,m,g,t,p,e)\n");
@@ -32,6 +35,7 @@ static void usage(const char *prog) {
     printf("  -b, --batch ITER   Batch mode iterations (0=loop forever)\n");
     printf("  -n, --iterations N Number of refresh cycles (0=run forever)\n");
     printf("  -p, --pid   LIST   Comma-separated PIDs to monitor\n");
+    printf("  -m, --max   N     Maximum number of processes to display (0=all)\n");
     printf("  -w, --width COLS  Override screen width in columns\n");
 }
 
@@ -73,6 +77,8 @@ static int run_batch(unsigned int delay_ms, enum sort_field sort,
             memset(&ms, 0, sizeof(ms));
         read_misc_stats(&misc);
         size_t need = count_processes();
+        if (max_entries && need > max_entries)
+            need = max_entries;
         if (need > proc_cap) {
             struct process_info *tmp = realloc(procs, need * sizeof(*procs));
             if (tmp) {
@@ -81,6 +87,8 @@ static int run_batch(unsigned int delay_ms, enum sort_field sort,
             }
         }
         size_t count = list_processes(procs, proc_cap);
+        if (max_entries && count > max_entries)
+            count = max_entries;
         qsort(procs, count, sizeof(struct process_info), compare);
         double mem_usage = 0.0;
         if (ms.total > 0)
@@ -131,6 +139,7 @@ int main(int argc, char *argv[]) {
         {"scale-task-mem", required_argument, NULL, 'e'},
         {"batch", required_argument, NULL, 'b'},
         {"iterations", required_argument, NULL, 'n'},
+        {"max", required_argument, NULL, 'm'},
         {"pid", required_argument, NULL, 'p'},
         {"width", required_argument, NULL, 'w'},
         {"help", no_argument, NULL, 'h'},
@@ -141,7 +150,7 @@ int main(int argc, char *argv[]) {
     int batch = 0;
     unsigned int iterations = 0;
     int columns = 0;
-    while ((opt = getopt_long(argc, argv, "d:s:E:e:b:n:p:w:h", long_opts, &idx)) != -1) {
+    while ((opt = getopt_long(argc, argv, "d:s:E:e:b:n:m:p:w:h", long_opts, &idx)) != -1) {
         switch (opt) {
         case 'd':
             delay_ms = (unsigned int)(strtod(optarg, NULL) * 1000);
@@ -172,6 +181,9 @@ int main(int argc, char *argv[]) {
         case 'n':
             iterations = (unsigned int)strtoul(optarg, NULL, 10);
             break;
+        case 'm':
+            max_entries = (size_t)strtoul(optarg, NULL, 10);
+            break;
         case 'p':
             set_pid_filter(optarg);
             break;
@@ -191,7 +203,7 @@ int main(int argc, char *argv[]) {
         return run_batch(delay_ms, sort, iterations);
 
 #ifdef WITH_UI
-    return run_ui(delay_ms, sort, iterations, columns);
+    return run_ui(delay_ms, sort, iterations, columns, max_entries);
 #else
     (void)delay_ms; /* unused */
     (void)sort;     /* unused */
