@@ -28,6 +28,10 @@ The `-s` option selects the sort field. Available values are:
 - `cpu` &ndash; sort by CPU usage
 - `mem` &ndash; sort by memory usage
 
+The `-b`/`--batch` option runs without the ncurses interface and prints
+plain text updates. Specify the number of iterations with `-b N`. Use `0`
+to loop indefinitely.
+
 When running the ncurses interface you can press `F3` or `>` to cycle to
 the next sort field and `<` to go back.
 Press `F4` or `o` to toggle between ascending and descending order.
