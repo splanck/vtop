@@ -164,3 +164,29 @@ size_t list_processes(struct process_info *buf, size_t max) {
     closedir(dir);
     return count;
 }
+
+int cmp_proc_pid(const void *a, const void *b) {
+    const struct process_info *pa = a;
+    const struct process_info *pb = b;
+    return pa->pid - pb->pid;
+}
+
+int cmp_proc_cpu(const void *a, const void *b) {
+    const struct process_info *pa = a;
+    const struct process_info *pb = b;
+    if (pa->cpu_usage < pb->cpu_usage)
+        return 1;
+    if (pa->cpu_usage > pb->cpu_usage)
+        return -1;
+    return 0;
+}
+
+int cmp_proc_mem(const void *a, const void *b) {
+    const struct process_info *pa = a;
+    const struct process_info *pb = b;
+    if (pa->rss < pb->rss)
+        return 1;
+    if (pa->rss > pb->rss)
+        return -1;
+    return 0;
+}

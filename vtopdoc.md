@@ -42,12 +42,15 @@ monitoring tools without requiring additional dependencies.
 - `-d SECS` &mdash; Set the refresh delay in seconds. The default is
   `3` seconds just like `top`.
 - `-s COL` &mdash; Choose the column to sort by. Supported values are
-  `pid`, `name`, `vsize` and `rss`. The default is `pid`.
+  `pid`, `cpu` and `mem`. The default is `pid`.
 
 Examples:
 
 ```sh
 vtop              # run with defaults (3s delay, sort by pid)
 vtop -d 1         # update every second
-vtop -s rss       # sort processes by resident set size
+vtop -s cpu       # sort processes by CPU usage
 ```
+
+In the interactive interface press `F3` or `>` to cycle to the next sort
+field and `<` to go back.

@@ -41,4 +41,9 @@ int read_cpu_stats(struct cpu_stats *stats);
 int read_mem_stats(struct mem_stats *stats);
 size_t list_processes(struct process_info *buf, size_t max);
 
+/* comparison helpers for sorting */
+int cmp_proc_pid(const void *a, const void *b);
+int cmp_proc_cpu(const void *a, const void *b);
+int cmp_proc_mem(const void *a, const void *b);
+
 #endif /* PROC_H */

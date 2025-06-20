@@ -8,7 +8,7 @@
 static void usage(const char *prog) {
     printf("Usage: %s [-d seconds] [-s column]\n", prog);
     printf("  -d SECS   Refresh delay in seconds (default 3)\n");
-    printf("  -s COL    Sort column: pid,name,vsize,rss (default pid)\n");
+    printf("  -s COL    Sort column: pid,cpu,mem (default pid)\n");
 }
 
 int main(int argc, char *argv[]) {
@@ -22,12 +22,10 @@ int main(int argc, char *argv[]) {
             delay_ms = (unsigned int)(strtod(optarg, NULL) * 1000);
             break;
         case 's':
-            if (strcmp(optarg, "name") == 0)
-                sort = SORT_NAME;
-            else if (strcmp(optarg, "vsize") == 0)
-                sort = SORT_VSIZE;
-            else if (strcmp(optarg, "rss") == 0)
-                sort = SORT_RSS;
+            if (strcmp(optarg, "cpu") == 0)
+                sort = SORT_CPU;
+            else if (strcmp(optarg, "mem") == 0)
+                sort = SORT_MEM;
             else
                 sort = SORT_PID;
             break;
