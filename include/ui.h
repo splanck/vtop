@@ -10,6 +10,21 @@ enum sort_field {
 int run_ui(unsigned int delay_ms, enum sort_field sort,
            unsigned int iterations);
 
+enum mem_unit {
+    MEM_UNIT_K,
+    MEM_UNIT_M,
+    MEM_UNIT_G,
+    MEM_UNIT_T,
+    MEM_UNIT_P,
+    MEM_UNIT_E
+};
+
+extern enum mem_unit summary_unit;
+extern enum mem_unit proc_unit;
+
+double scale_kb(unsigned long long kb, enum mem_unit unit);
+const char *mem_unit_suffix(enum mem_unit unit);
+
 #ifdef WITH_UI
 /* Load configuration from ~/.vtoprc if available. The delay and sort
  * parameters are updated with the loaded values. */
