@@ -701,3 +701,30 @@ int cmp_proc_mem(const void *a, const void *b) {
         res = -res;
     return res;
 }
+
+int cmp_proc_time(const void *a, const void *b) {
+    const struct process_info *pa = a;
+    const struct process_info *pb = b;
+    int res = 0;
+    if (pa->cpu_time < pb->cpu_time)
+        res = -1;
+    else if (pa->cpu_time > pb->cpu_time)
+        res = 1;
+    if (sort_descending)
+        res = -res;
+    return res;
+}
+
+int cmp_proc_priority(const void *a, const void *b) {
+    const struct process_info *pa = a;
+    const struct process_info *pb = b;
+    long diff = pa->priority - pb->priority;
+    int res = 0;
+    if (diff < 0)
+        res = -1;
+    else if (diff > 0)
+        res = 1;
+    if (sort_descending)
+        res = -res;
+    return res;
+}

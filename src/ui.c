@@ -110,6 +110,11 @@ int ui_load_config(unsigned int *delay_ms, enum sort_field *sort) {
                     *sort = SORT_CPU;
                 else if (strcmp(val, "mem") == 0)
                     *sort = SORT_MEM;
+                else if (strcmp(val, "time") == 0)
+                    *sort = SORT_TIME;
+                else if (strcmp(val, "pri") == 0 ||
+                         strcmp(val, "priority") == 0)
+                    *sort = SORT_PRI;
                 else
                     *sort = SORT_PID;
             }
@@ -148,6 +153,10 @@ int ui_save_config(unsigned int delay_ms, enum sort_field sort) {
         s = "cpu";
     else if (sort == SORT_MEM)
         s = "mem";
+    else if (sort == SORT_TIME)
+        s = "time";
+    else if (sort == SORT_PRI)
+        s = "pri";
     fprintf(fp, "sort=%s\n", s);
     fprintf(fp, "show_cores=%d\n", show_cores);
     fprintf(fp, "show_full_cmd=%d\n", show_full_cmd);
@@ -182,6 +191,10 @@ static enum column_id get_sort_column(void) {
         return COL_CPUP;
     case SORT_MEM:
         return COL_RSS;
+    case SORT_TIME:
+        return COL_TIME;
+    case SORT_PRI:
+        return COL_PRI;
     case SORT_PID:
     default:
         return COL_PID;
@@ -331,7 +344,7 @@ static void field_manager(void) {
 }
 
 static void show_help(void) {
-    const int h = 23;
+    const int h = 25;
     const int w = 52;
     int startx = COLS > w ? (COLS - w) / 2 : 0;
     if (startx < 0)
@@ -344,23 +357,25 @@ static void show_help(void) {
     mvwprintw(win, 1, 2, "Key bindings:");
     mvwprintw(win, 3, 2, "q  Quit");
     mvwprintw(win, 4, 2, "F3/>/<  Change sort field");
-    mvwprintw(win, 5, 2, "F4/o    Toggle sort order");
-    mvwprintw(win, 6, 2, "+/-     Adjust refresh delay");
-    mvwprintw(win, 7, 2, "d/s     Set refresh delay");
-    mvwprintw(win, 8, 2, "/       Filter by command name");
-    mvwprintw(win, 9, 2, "u       Filter by user");
-    mvwprintw(win, 10, 2, "k       Send signal to a process");
-    mvwprintw(win, 11, 2, "r       Renice a process");
-    mvwprintw(win, 12, 2, "c       Toggle per-core view");
-    mvwprintw(win, 13, 2, "a       Toggle full command");
-    mvwprintw(win, 14, 2, "H       Toggle thread view");
-    mvwprintw(win, 15, 2, "i       Toggle idle processes");
-    mvwprintw(win, 16, 2, "V       Toggle process tree");
-    mvwprintw(win, 17, 2, "z       Toggle colors");
-    mvwprintw(win, 18, 2, "f       Field manager");
-    mvwprintw(win, 19, 2, "W       Save config");
-    mvwprintw(win, 20, 2, "SPACE    Pause/resume");
-    mvwprintw(win, 21, 2, "h       Show this help");
+    mvwprintw(win, 5, 2, "T       Sort by time");
+    mvwprintw(win, 6, 2, "P       Sort by priority");
+    mvwprintw(win, 7, 2, "F4/o    Toggle sort order");
+    mvwprintw(win, 8, 2, "+/-     Adjust refresh delay");
+    mvwprintw(win, 9, 2, "d/s     Set refresh delay");
+    mvwprintw(win, 10, 2, "/       Filter by command name");
+    mvwprintw(win, 11, 2, "u       Filter by user");
+    mvwprintw(win, 12, 2, "k       Send signal to a process");
+    mvwprintw(win, 13, 2, "r       Renice a process");
+    mvwprintw(win, 14, 2, "c       Toggle per-core view");
+    mvwprintw(win, 15, 2, "a       Toggle full command");
+    mvwprintw(win, 16, 2, "H       Toggle thread view");
+    mvwprintw(win, 17, 2, "i       Toggle idle processes");
+    mvwprintw(win, 18, 2, "V       Toggle process tree");
+    mvwprintw(win, 19, 2, "z       Toggle colors");
+    mvwprintw(win, 20, 2, "f       Field manager");
+    mvwprintw(win, 21, 2, "W       Save config");
+    mvwprintw(win, 22, 2, "SPACE    Pause/resume");
+    mvwprintw(win, 23, 2, "h       Show this help");
     mvwprintw(win, h - 2, 2, "Press any key to return");
     wrefresh(win);
     nodelay(stdscr, FALSE);
@@ -383,6 +398,14 @@ static void set_sort(enum sort_field sort) {
     case SORT_MEM:
         compare_procs = cmp_proc_mem;
         set_sort_descending(1);
+        break;
+    case SORT_TIME:
+        compare_procs = cmp_proc_time;
+        set_sort_descending(1);
+        break;
+    case SORT_PRI:
+        compare_procs = cmp_proc_priority;
+        set_sort_descending(0);
         break;
     }
 }
@@ -594,13 +617,13 @@ int run_ui(unsigned int delay_ms, enum sort_field sort,
         ch = getch();
         iter++;
         if (ch == KEY_F(3) || ch == '>') {
-            if (current_sort == SORT_MEM)
+            if (current_sort == SORT_PRI)
                 set_sort(SORT_PID);
             else
                 set_sort(current_sort + 1);
         } else if (ch == '<') {
             if (current_sort == SORT_PID)
-                set_sort(SORT_MEM);
+                set_sort(SORT_PRI);
             else
                 set_sort(current_sort - 1);
         } else if (ch == '+') {
@@ -683,6 +706,10 @@ int run_ui(unsigned int delay_ms, enum sort_field sort,
             nodelay(stdscr, TRUE);
         } else if (ch == KEY_F(4) || ch == 'o') {
             set_sort_descending(!get_sort_descending());
+        } else if (ch == 'T') {
+            set_sort(SORT_TIME);
+        } else if (ch == 'P') {
+            set_sort(SORT_PRI);
         } else if (ch == 'c') {
             show_cores = !show_cores;
         } else if (ch == 'a') {

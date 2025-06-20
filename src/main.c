@@ -26,7 +26,7 @@ static enum mem_unit parse_unit(const char *arg) {
 static void usage(const char *prog) {
     printf("Usage: %s [-d seconds] [-s column] [-E unit] [-e unit] [-b iter] [-n iter] [-p pid,...] [-w cols]\n", prog);
     printf("  -d, --delay SECS   Refresh delay in seconds (default 3)\n");
-    printf("  -s, --sort  COL    Sort column: pid,cpu,mem (default pid)\n");
+    printf("  -s, --sort  COL    Sort column: pid,cpu,mem,time,pri (default pid)\n");
     printf("  -E, --scale-summary-mem UNIT  Memory units for summary (k,m,g,t,p,e)\n");
     printf("  -e, --scale-task-mem UNIT     Memory units for processes (k,m,g,t,p,e)\n");
     printf("  -b, --batch ITER   Batch mode iterations (0=loop forever)\n");
@@ -51,6 +51,14 @@ static int run_batch(unsigned int delay_ms, enum sort_field sort,
     case SORT_MEM:
         compare = cmp_proc_mem;
         set_sort_descending(1);
+        break;
+    case SORT_TIME:
+        compare = cmp_proc_time;
+        set_sort_descending(1);
+        break;
+    case SORT_PRI:
+        compare = cmp_proc_priority;
+        set_sort_descending(0);
         break;
     default:
         compare = cmp_proc_pid;
@@ -143,6 +151,11 @@ int main(int argc, char *argv[]) {
                 sort = SORT_CPU;
             else if (strcmp(optarg, "mem") == 0)
                 sort = SORT_MEM;
+            else if (strcmp(optarg, "time") == 0)
+                sort = SORT_TIME;
+            else if (strcmp(optarg, "pri") == 0 ||
+                     strcmp(optarg, "priority") == 0)
+                sort = SORT_PRI;
             else
                 sort = SORT_PID;
             break;
