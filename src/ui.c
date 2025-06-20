@@ -337,7 +337,7 @@ static void show_help(void) {
     mvwprintw(win, 7, 2, "d/s     Set refresh delay");
     mvwprintw(win, 8, 2, "/       Filter by command name");
     mvwprintw(win, 9, 2, "u       Filter by user");
-    mvwprintw(win, 10, 2, "k       Kill a process");
+    mvwprintw(win, 10, 2, "k       Send signal to a process");
     mvwprintw(win, 11, 2, "r       Renice a process");
     mvwprintw(win, 12, 2, "c       Toggle per-core view");
     mvwprintw(win, 13, 2, "a       Toggle full command");
@@ -590,14 +590,18 @@ int run_ui(unsigned int delay_ms, enum sort_field sort,
             curs_set(0);
             nodelay(stdscr, TRUE);
         } else if (ch == 'k') {
-            char buf[16];
+            char buf1[16];
+            char buf2[16];
             nodelay(stdscr, FALSE);
             echo();
             curs_set(1);
-            mvprintw(LINES - 1, 0, "PID to kill: ");
-            getnstr(buf, sizeof(buf) - 1);
-            int pid = atoi(buf);
-            send_signal(pid, SIGTERM);
+            mvprintw(LINES - 1, 0, "PID to signal: ");
+            getnstr(buf1, sizeof(buf1) - 1);
+            mvprintw(LINES - 1, 0, "Signal number: ");
+            getnstr(buf2, sizeof(buf2) - 1);
+            int pid = atoi(buf1);
+            int sig = atoi(buf2);
+            send_signal(pid, sig);
             noecho();
             curs_set(0);
             nodelay(stdscr, TRUE);
