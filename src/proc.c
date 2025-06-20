@@ -4,6 +4,19 @@
 #include <string.h>
 #include <dirent.h>
 
+/* store previous per-process CPU times between calls */
+#define MAX_PREV 1024
+struct prev_entry {
+    int pid;
+    unsigned long long utime;
+    unsigned long long stime;
+};
+static struct prev_entry prev_table[MAX_PREV];
+static size_t prev_count;
+
+/* previous total CPU time for usage calculation */
+static unsigned long long last_total_cpu;
+
 int read_cpu_stats(struct cpu_stats *stats) {
     FILE *fp = fopen("/proc/stat", "r");
     if (!fp) {
@@ -66,6 +79,18 @@ int read_mem_stats(struct mem_stats *stats) {
 }
 
 size_t list_processes(struct process_info *buf, size_t max) {
+    struct cpu_stats cs;
+    unsigned long long total_delta = 1;
+    if (read_cpu_stats(&cs) == 0) {
+        unsigned long long total = cs.user + cs.nice + cs.system + cs.idle +
+                                   cs.iowait + cs.irq + cs.softirq + cs.steal;
+        if (last_total_cpu != 0)
+            total_delta = total - last_total_cpu;
+        last_total_cpu = total;
+        if (total_delta == 0)
+            total_delta = 1;
+    }
+
     DIR *dir = opendir("/proc");
     if (!dir)
         return 0;
@@ -83,20 +108,45 @@ size_t list_processes(struct process_info *buf, size_t max) {
             continue;
         char line[1024];
         if (fgets(line, sizeof(line), fp)) {
-            /* pid (comm) state ... vsize rss */
+            /* pid (comm) state ... utime stime ... vsize rss */
             char comm[256];
             char state;
+            unsigned long long utime, stime;
             unsigned long long vsize;
             long rss;
-            /* We only parse required fields */
-            sscanf(line, "%*d (%255[^)]) %c %*s %*s %*s %*s %*s %*s %*s %*s %*s %*s %*s %*s %*s %*s %*s %*s %*s %llu %ld",
-                   comm, &state, &vsize, &rss);
+            sscanf(line,
+                   "%*d (%255[^)]) %c %*s %*s %*s %*s %*s %*s %*s %*s %*s %*s %llu %llu %*s %*s %*s %*s %*s %*s %*s %llu %ld",
+                   comm, &state, &utime, &stime, &vsize, &rss);
+
+            unsigned long long old_utime = 0, old_stime = 0;
+            for (size_t i = 0; i < prev_count; i++) {
+                if (prev_table[i].pid == pid) {
+                    old_utime = prev_table[i].utime;
+                    old_stime = prev_table[i].stime;
+                    prev_table[i].utime = utime;
+                    prev_table[i].stime = stime;
+                    break;
+                }
+            }
+            if (old_utime == 0 && old_stime == 0 && prev_count < MAX_PREV) {
+                prev_table[prev_count].pid = pid;
+                prev_table[prev_count].utime = utime;
+                prev_table[prev_count].stime = stime;
+                prev_count++;
+            }
+
+            unsigned long long delta = (utime - old_utime) + (stime - old_stime);
+            double usage = 100.0 * (double)delta / (double)total_delta;
+
             buf[count].pid = (int)pid;
             strncpy(buf[count].name, comm, sizeof(buf[count].name) - 1);
             buf[count].name[sizeof(buf[count].name) - 1] = '\0';
             buf[count].state = state;
             buf[count].vsize = vsize;
             buf[count].rss = rss;
+            buf[count].prev_utime = utime;
+            buf[count].prev_stime = stime;
+            buf[count].cpu_usage = usage;
             count++;
         }
         fclose(fp);
