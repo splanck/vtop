@@ -4,6 +4,7 @@
 #include <string.h>
 #include <dirent.h>
 #include <unistd.h>
+#include <pwd.h>
 
 /* store previous per-process CPU times between calls */
 #define MAX_PREV 1024
@@ -126,6 +127,20 @@ size_t list_processes(struct process_info *buf, size_t max) {
                    "%*d (%255[^)]) %c %*s %*s %*s %*s %*s %*s %*s %*s %*s %*s %llu %llu %*s %*s %*s %*s %*s %*s %*s %llu %ld",
                    comm, &state, &utime, &stime, &vsize, &rss);
 
+            unsigned int uid = 0;
+            snprintf(path, sizeof(path), "/proc/%ld/status", pid);
+            FILE *fs = fopen(path, "r");
+            if (fs) {
+                char line2[256];
+                while (fgets(line2, sizeof(line2), fs)) {
+                    if (strncmp(line2, "Uid:", 4) == 0) {
+                        sscanf(line2 + 4, "%u", &uid);
+                        break;
+                    }
+                }
+                fclose(fs);
+            }
+
             unsigned long long old_utime = 0, old_stime = 0;
             for (size_t i = 0; i < prev_count; i++) {
                 if (prev_table[i].pid == pid) {
@@ -147,6 +162,14 @@ size_t list_processes(struct process_info *buf, size_t max) {
             double usage = 100.0 * (double)delta / (double)total_delta;
 
             buf[count].pid = (int)pid;
+            buf[count].uid = uid;
+            struct passwd *pw = getpwuid((uid_t)uid);
+            if (pw) {
+                strncpy(buf[count].user, pw->pw_name, sizeof(buf[count].user) - 1);
+                buf[count].user[sizeof(buf[count].user) - 1] = '\0';
+            } else {
+                snprintf(buf[count].user, sizeof(buf[count].user), "%u", uid);
+            }
             strncpy(buf[count].name, comm, sizeof(buf[count].name) - 1);
             buf[count].name[sizeof(buf[count].name) - 1] = '\0';
             buf[count].state = state;

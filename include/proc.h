@@ -33,6 +33,10 @@ struct misc_stats {
 
 struct process_info {
     int pid;
+    /* Numeric user ID of the process */
+    unsigned int uid;
+    /* Short username resolved from uid */
+    char user[32];
     char name[256];
     char state;
     unsigned long long vsize;

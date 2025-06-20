@@ -26,7 +26,9 @@ the number of running versus total tasks.
 For each process it reads the corresponding `/proc/[pid]/stat` file to
 extract the command name, state, virtual size and resident set size.
 Only a subset of the fields is parsed, keeping the parser short and
-robust.
+robust. The real user ID is read from `/proc/[pid]/status` and
+resolved to a username via `getpwuid()` so the UI can display the
+process owner.
 
 `list_processes()` also reports the resident set size as a percentage of
 total system memory. The value is computed with
@@ -58,5 +60,7 @@ vtop -d 1         # update every second
 vtop -s cpu       # sort processes by CPU usage
 ```
 
+The interactive display lists PID, USER, command name, state, virtual
+memory size, resident set size, memory usage percentage and CPU usage.
 In the interactive interface press `F3` or `>` to cycle to the next sort
 field and `<` to go back.
