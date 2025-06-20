@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <dirent.h>
+#include <unistd.h>
 
 /* store previous per-process CPU times between calls */
 #define MAX_PREV 1024
@@ -91,6 +92,13 @@ size_t list_processes(struct process_info *buf, size_t max) {
             total_delta = 1;
     }
 
+    struct mem_stats ms;
+    if (read_mem_stats(&ms) != 0)
+        ms.total = 1; /* avoid divide by zero */
+    long page_kb = getpagesize() / 1024;
+    if (page_kb <= 0)
+        page_kb = 4;
+
     DIR *dir = opendir("/proc");
     if (!dir)
         return 0;
@@ -144,6 +152,8 @@ size_t list_processes(struct process_info *buf, size_t max) {
             buf[count].state = state;
             buf[count].vsize = vsize;
             buf[count].rss = rss;
+            buf[count].rss_percent = 100.0 * (double)rss * (double)page_kb /
+                                   (double)ms.total;
             buf[count].prev_utime = utime;
             buf[count].prev_stime = stime;
             buf[count].cpu_usage = usage;

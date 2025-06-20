@@ -28,6 +28,8 @@ struct process_info {
     char state;
     unsigned long long vsize;
     long rss;
+    /* RSS as a percentage of total system memory */
+    double rss_percent;
     /* Previous user and system CPU times in clock ticks */
     unsigned long long prev_utime;
     unsigned long long prev_stime;
