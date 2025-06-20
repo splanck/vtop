@@ -22,12 +22,13 @@ static size_t core_count;
 static int show_cores;
 static int show_full_cmd;
 static int show_threads;
+static int show_idle = 1;
 
 static enum sort_field current_sort;
 static int (*compare_procs)(const void *, const void *) = cmp_proc_pid;
 
 static void show_help(void) {
-    const int h = 18;
+    const int h = 19;
     const int w = 52;
     WINDOW *win = newwin(h, w, (LINES - h) / 2, (COLS - w) / 2);
     box(win, 0, 0);
@@ -43,8 +44,9 @@ static void show_help(void) {
     mvwprintw(win, 11, 2, "c       Toggle per-core view");
     mvwprintw(win, 12, 2, "a       Toggle full command");
     mvwprintw(win, 13, 2, "H       Toggle thread view");
-    mvwprintw(win, 14, 2, "SPACE    Pause/resume");
-    mvwprintw(win, 15, 2, "h       Show this help");
+    mvwprintw(win, 14, 2, "i       Toggle idle processes");
+    mvwprintw(win, 15, 2, "SPACE    Pause/resume");
+    mvwprintw(win, 16, 2, "h       Show this help");
     mvwprintw(win, h - 2, 2, "Press any key to return");
     wrefresh(win);
     nodelay(stdscr, FALSE);
@@ -93,6 +95,7 @@ int run_ui(unsigned int delay_ms, enum sort_field sort,
     set_sort(sort);
     show_threads = get_thread_mode();
     set_thread_mode(show_threads);
+    set_show_idle(show_idle);
     unsigned int interval = delay_ms;
     if (interval < MIN_DELAY_MS)
         interval = MIN_DELAY_MS;
@@ -294,6 +297,9 @@ int run_ui(unsigned int delay_ms, enum sort_field sort,
         } else if (ch == 'H') {
             show_threads = !show_threads;
             set_thread_mode(show_threads);
+        } else if (ch == 'i') {
+            show_idle = !show_idle;
+            set_show_idle(show_idle);
         } else if (ch == ' ') {
             paused = !paused;
         } else if (ch == 'h') {

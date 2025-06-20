@@ -105,4 +105,8 @@ int get_sort_descending(void);
 void set_thread_mode(int on);
 int get_thread_mode(void);
 
+/* show processes with zero CPU usage */
+void set_show_idle(int on);
+int get_show_idle(void);
+
 #endif /* PROC_H */
