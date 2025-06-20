@@ -1,10 +1,12 @@
 #include "proc.h"
 #include "ui.h"
+#include "control.h"
 #ifdef WITH_UI
 #include <ncurses.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <signal.h>
 
 #define MAX_PROC 256
 
@@ -91,6 +93,34 @@ int run_ui(unsigned int delay_ms, enum sort_field sort) {
                 set_sort(SORT_MEM);
             else
                 set_sort(current_sort - 1);
+        } else if (ch == 'k') {
+            char buf[16];
+            nodelay(stdscr, FALSE);
+            echo();
+            curs_set(1);
+            mvprintw(LINES - 1, 0, "PID to kill: ");
+            getnstr(buf, sizeof(buf) - 1);
+            int pid = atoi(buf);
+            send_signal(pid, SIGTERM);
+            noecho();
+            curs_set(0);
+            nodelay(stdscr, TRUE);
+        } else if (ch == 'r') {
+            char buf1[16];
+            char buf2[16];
+            nodelay(stdscr, FALSE);
+            echo();
+            curs_set(1);
+            mvprintw(LINES - 1, 0, "PID to renice: ");
+            getnstr(buf1, sizeof(buf1) - 1);
+            mvprintw(LINES - 1, 0, "New nice value: ");
+            getnstr(buf2, sizeof(buf2) - 1);
+            int pid = atoi(buf1);
+            int nv = atoi(buf2);
+            change_priority(pid, nv);
+            noecho();
+            curs_set(0);
+            nodelay(stdscr, TRUE);
         }
     }
     endwin();

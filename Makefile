@@ -1,6 +1,6 @@
 CC := gcc
 CFLAGS := -Wall -O2 -Iinclude
-SRC := src/main.c src/proc.c
+SRC := src/main.c src/proc.c src/control.c
 BIN := vtop
 
 ifdef WITH_UI
