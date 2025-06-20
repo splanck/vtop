@@ -499,7 +499,18 @@ int run_ui(unsigned int delay_ms, enum sort_field sort,
                  cs.iowait_percent, cs.irq_percent, cs.softirq_percent, cs.steal_percent,
                  mem_usage, swap_u, swap_t, unit, swap_usage,
                  interval / 1000.0, paused ? " [PAUSED]" : "", fbuf);
-        int row = 1;
+
+        double total = scale_kb(ms.total, summary_unit);
+        double used = scale_kb(ms.total - ms.free, summary_unit);
+        double free = scale_kb(ms.free, summary_unit);
+        double bufs = scale_kb(ms.buffers, summary_unit);
+        double cached = scale_kb(ms.cached, summary_unit);
+        mvprintw(1, 0,
+                 "mem total %.0f%s used %.0f%s free %.0f%s buf %.0f%s cache %.0f%s swap %.0f/%.0f%s",
+                 total, unit, used, unit, free, unit, bufs, unit, cached, unit,
+                 swap_u, swap_t, unit);
+
+        int row = 2;
         if (show_cores && core_count > 0) {
             char cbuf[256] = "";
             for (size_t i = 0; i < core_count; i++) {
@@ -510,8 +521,8 @@ int run_ui(unsigned int delay_ms, enum sort_field sort,
                 else
                     break;
             }
-            mvprintw(1, 0, "%s", cbuf);
-            row = 2;
+            mvprintw(row, 0, "%s", cbuf);
+            row++;
         }
         draw_header(row);
         for (size_t i = 0; i < count && i < LINES - row - 2; i++) {
