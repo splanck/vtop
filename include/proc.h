@@ -106,6 +106,8 @@ const char *get_pid_filter(void);
 int cmp_proc_pid(const void *a, const void *b);
 int cmp_proc_cpu(const void *a, const void *b);
 int cmp_proc_mem(const void *a, const void *b);
+int cmp_proc_time(const void *a, const void *b);
+int cmp_proc_priority(const void *a, const void *b);
 
 /* sort order control */
 void set_sort_descending(int desc);

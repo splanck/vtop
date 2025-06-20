@@ -4,7 +4,9 @@
 enum sort_field {
     SORT_PID,
     SORT_CPU,
-    SORT_MEM
+    SORT_MEM,
+    SORT_TIME,
+    SORT_PRI
 };
 
 int run_ui(unsigned int delay_ms, enum sort_field sort,
