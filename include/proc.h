@@ -51,6 +51,9 @@ struct misc_stats {
     double uptime;
     int running_tasks;
     int total_tasks;
+    int sleeping_tasks;
+    int stopped_tasks;
+    int zombie_tasks;
 };
 
 struct process_info {
