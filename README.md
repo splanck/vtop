@@ -39,6 +39,9 @@ Use `-m N` to limit the number of displayed tasks.
 The `-w` option allows overriding the screen width used by the ncurses
 layout. When the specified width is smaller than the default, columns are
 truncated to fit.
+The `-S`/`--secure` flag disables sending signals and changing
+process priorities. Use this when running vtop in restricted
+environments.
 
 When running the ncurses interface you can press `F3` or `>` to cycle to
 the next sort field and `<` to go back.
