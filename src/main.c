@@ -43,6 +43,7 @@ static void usage(const char *prog) {
     printf("  -w, --width COLS  Override screen width in columns\n");
     printf("  -a, --cmdline     Display the full command line by default\n");
     printf("  -i, --hide-idle   Hide processes with zero CPU usage\n");
+    printf("  -H, --threads     Show individual threads instead of processes\n");
     printf("      --irix        Do not scale CPU%% by number of CPUs\n");
     printf("      --accum       Include child CPU time in TIME column\n");
 #ifdef WITH_UI
@@ -167,6 +168,7 @@ int main(int argc, char *argv[]) {
         {"width", required_argument, NULL, 'w'},
         {"cmdline", no_argument, NULL, 'a'},
         {"hide-idle", no_argument, NULL, 'i'},
+        {"threads", no_argument, NULL, 'H'},
 #ifdef WITH_UI
         {"list-fields", no_argument, NULL, 2},
 #endif
@@ -180,7 +182,7 @@ int main(int argc, char *argv[]) {
     int batch = 0;
     unsigned int iterations = 0;
     int columns = 0;
-    while ((opt = getopt_long(argc, argv, "d:Ss:E:e:b:n:m:p:u:U:w:aih", long_opts, &idx)) != -1) {
+    while ((opt = getopt_long(argc, argv, "d:Ss:E:e:b:n:m:p:u:U:w:aiHh", long_opts, &idx)) != -1) {
         switch (opt) {
         case 'd':
             delay_ms = (unsigned int)(strtod(optarg, NULL) * 1000);
@@ -253,6 +255,9 @@ int main(int argc, char *argv[]) {
 #ifdef WITH_UI
             ui_set_show_idle(0);
 #endif
+            break;
+        case 'H':
+            set_thread_mode(1);
             break;
         case 'h':
         default:
