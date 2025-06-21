@@ -493,7 +493,7 @@ static void field_manager(void) {
 }
 
 static void show_help(void) {
-    const int h = 33;
+    const int h = 34;
     const int w = 52;
     int startx = COLS > w ? (COLS - w) / 2 : 0;
     if (startx < 0)
@@ -510,30 +510,31 @@ static void show_help(void) {
     mvwprintw(win, 6, 2, "P       Sort by priority");
     mvwprintw(win, 7, 2, "U       Sort by user");
     mvwprintw(win, 8, 2, "B       Sort by start time");
-    mvwprintw(win, 9, 2, "F4/o    Toggle sort order");
-    mvwprintw(win, 10, 2, "+/-     Adjust refresh delay");
-    mvwprintw(win, 11, 2, "d/s     Set refresh delay");
-    mvwprintw(win, 12, 2, "/       Filter by command name");
-    mvwprintw(win, 13, 2, "u       Filter by user");
-    mvwprintw(win, 14, 2, "k       Send signal to a process");
-    mvwprintw(win, 15, 2, "r       Renice a process");
-    mvwprintw(win, 16, 2, "c       Toggle per-core view");
-    mvwprintw(win, 17, 2, "a       Toggle full command");
-    mvwprintw(win, 18, 2, "H       Toggle thread view");
-    mvwprintw(win, 19, 2, "i       Toggle idle processes");
-    mvwprintw(win, 20, 2, "V       Toggle process tree");
-    mvwprintw(win, 21, 2, "Z       Cycle color scheme");
-    mvwprintw(win, 22, 2, "x       Toggle sort highlight");
-    mvwprintw(win, 23, 2, "S       Toggle cumulative time");
-    mvwprintw(win, 24, 2, "I       Toggle Irix mode");
-    mvwprintw(win, 25, 2, "E       Cycle memory units");
-    mvwprintw(win, 26, 2, "t       Toggle CPU summary");
-    mvwprintw(win, 27, 2, "m       Toggle memory summary");
-    mvwprintw(win, 28, 2, "f       Field manager");
-    mvwprintw(win, 29, 2, "n       Set entry limit");
-    mvwprintw(win, 30, 2, "W       Save config");
-    mvwprintw(win, 31, 2, "SPACE    Pause/resume");
-    mvwprintw(win, 32, 2, "h       Show this help");
+    mvwprintw(win, 9, 2, "C       Sort by CPU usage");
+    mvwprintw(win, 10, 2, "F4/o    Toggle sort order");
+    mvwprintw(win, 11, 2, "+/-     Adjust refresh delay");
+    mvwprintw(win, 12, 2, "d/s     Set refresh delay");
+    mvwprintw(win, 13, 2, "/       Filter by command name");
+    mvwprintw(win, 14, 2, "u       Filter by user");
+    mvwprintw(win, 15, 2, "k       Send signal to a process");
+    mvwprintw(win, 16, 2, "r       Renice a process");
+    mvwprintw(win, 17, 2, "c       Toggle per-core view");
+    mvwprintw(win, 18, 2, "a       Toggle full command");
+    mvwprintw(win, 19, 2, "H       Toggle thread view");
+    mvwprintw(win, 20, 2, "i       Toggle idle processes");
+    mvwprintw(win, 21, 2, "V       Toggle process tree");
+    mvwprintw(win, 22, 2, "Z       Cycle color scheme");
+    mvwprintw(win, 23, 2, "x       Toggle sort highlight");
+    mvwprintw(win, 24, 2, "S       Toggle cumulative time");
+    mvwprintw(win, 25, 2, "I       Toggle Irix mode");
+    mvwprintw(win, 26, 2, "E       Cycle memory units");
+    mvwprintw(win, 27, 2, "t       Toggle CPU summary");
+    mvwprintw(win, 28, 2, "m       Toggle memory summary");
+    mvwprintw(win, 29, 2, "f       Field manager");
+    mvwprintw(win, 30, 2, "n       Set entry limit");
+    mvwprintw(win, 31, 2, "W       Save config");
+    mvwprintw(win, 32, 2, "SPACE    Pause/resume");
+    mvwprintw(win, 33, 2, "h       Show this help");
     mvwprintw(win, h - 2, 2, "Press any key to return");
     wrefresh(win);
     nodelay(stdscr, FALSE);
@@ -893,6 +894,8 @@ int run_ui(unsigned int delay_ms, enum sort_field sort,
             set_sort(SORT_USER);
         } else if (ch == 'B') {
             set_sort(SORT_START);
+        } else if (ch == 'C') {
+            set_sort(SORT_CPU);
         } else if (ch == 'c') {
             show_cores = !show_cores;
         } else if (ch == 'a') {
