@@ -45,6 +45,9 @@ The `-S`/`--secure` flag disables sending signals and changing
 process priorities. Use this when running vtop in restricted
 environments.
 The `--accum` option displays CPU time including dead children.
+The `-a`/`--cmdline` flag shows the full command line instead of the short
+command name.
+Use `-i`/`--hide-idle` to start with idle processes hidden.
 
 When running the ncurses interface you can press `F3` or `>` to cycle to
 the next sort field and `<` to go back.

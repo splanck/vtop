@@ -33,6 +33,8 @@ const char *mem_unit_suffix(enum mem_unit unit);
 enum mem_unit next_mem_unit(enum mem_unit unit);
 
 #ifdef WITH_UI
+void ui_set_show_full_cmd(int on);
+void ui_set_show_idle(int on);
 /* Load configuration from ~/.vtoprc if available. The delay and sort
  * parameters are updated with the loaded values. */
 int ui_load_config(unsigned int *delay_ms, enum sort_field *sort);
