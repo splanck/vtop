@@ -33,7 +33,8 @@ The `-s` option selects the sort field. Available values are:
 The `-b`/`--batch` option runs without the ncurses interface and prints
 plain text updates. Use `-n N` to limit the number of refresh cycles;
 `0` runs indefinitely. The `-p` option restricts the output to the
-comma-separated list of PIDs given. The `-E` and `-e` options control the
+comma-separated list of PIDs given. The `-C` option filters processes by a
+substring of the command name. The `-E` and `-e` options control the
 units used when displaying memory. Both accept one of `k`, `m`, `g`, `t`,
 `p` or `e` for kilobytes through exabytes. `-E` affects the summary line
 while `-e` scales per-process values.
@@ -55,6 +56,8 @@ Use `--per-cpu` to show per-core CPU usage by default.
 Use `-V`/`--version` to print the vtop version and exit.
 
 Use `-u USER` or `-U USER` to show only processes owned by `USER`.
+Use `-C STR` or `--command-filter STR` to display only tasks whose
+command contains the given substring.
 
 ```sh
 vtop -u alice
