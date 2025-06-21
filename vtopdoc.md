@@ -65,7 +65,7 @@ monitoring tools without requiring additional dependencies.
 - `-d SECS` &mdash; Set the refresh delay in seconds. The default is
   `3` seconds just like `top`.
 - `-s COL` &mdash; Choose the column to sort by. Supported values are
-  `pid`, `cpu` and `mem`. The default is `pid`.
+  `pid`, `cpu`, `mem`, `user` and `start`. The default is `pid`.
 - `-S` &mdash; Enable secure mode which disables signaling and renicing
   processes.
 - `--accum` &mdash; Include child CPU time when displaying `TIME`.
@@ -95,6 +95,8 @@ Process management shortcuts are also available:
 - `a` &ndash; toggle between the short name and full command line.
 - `S` &ndash; toggle cumulative CPU time display.
 - `F4`/`o` &ndash; change the sort direction.
+- `U` &ndash; sort by user.
+- `B` &ndash; sort by start time.
 - `h` &ndash; display a help window showing available shortcuts.
 
 Use caution when running with elevated privileges because killing or

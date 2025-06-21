@@ -131,6 +131,10 @@ int ui_load_config(unsigned int *delay_ms, enum sort_field *sort) {
                     *sort = SORT_CPU;
                 else if (strcmp(val, "mem") == 0)
                     *sort = SORT_MEM;
+                else if (strcmp(val, "user") == 0)
+                    *sort = SORT_USER;
+                else if (strcmp(val, "start") == 0)
+                    *sort = SORT_START;
                 else if (strcmp(val, "time") == 0)
                     *sort = SORT_TIME;
                 else if (strcmp(val, "pri") == 0 ||
@@ -204,6 +208,10 @@ int ui_save_config(unsigned int delay_ms, enum sort_field sort) {
         s = "cpu";
     else if (sort == SORT_MEM)
         s = "mem";
+    else if (sort == SORT_USER)
+        s = "user";
+    else if (sort == SORT_START)
+        s = "start";
     else if (sort == SORT_TIME)
         s = "time";
     else if (sort == SORT_PRI)
@@ -266,6 +274,10 @@ static enum column_id get_sort_column(void) {
         return COL_CPUP;
     case SORT_MEM:
         return COL_RSS;
+    case SORT_USER:
+        return COL_USER;
+    case SORT_START:
+        return COL_START;
     case SORT_TIME:
         return COL_TIME;
     case SORT_PRI:
@@ -447,7 +459,7 @@ static void field_manager(void) {
 }
 
 static void show_help(void) {
-    const int h = 29;
+    const int h = 31;
     const int w = 52;
     int startx = COLS > w ? (COLS - w) / 2 : 0;
     if (startx < 0)
@@ -462,28 +474,30 @@ static void show_help(void) {
     mvwprintw(win, 4, 2, "F3/>/<  Change sort field");
     mvwprintw(win, 5, 2, "T       Sort by time");
     mvwprintw(win, 6, 2, "P       Sort by priority");
-    mvwprintw(win, 7, 2, "F4/o    Toggle sort order");
-    mvwprintw(win, 8, 2, "+/-     Adjust refresh delay");
-    mvwprintw(win, 9, 2, "d/s     Set refresh delay");
-    mvwprintw(win, 10, 2, "/       Filter by command name");
-    mvwprintw(win, 11, 2, "u       Filter by user");
-    mvwprintw(win, 12, 2, "k       Send signal to a process");
-    mvwprintw(win, 13, 2, "r       Renice a process");
-    mvwprintw(win, 14, 2, "c       Toggle per-core view");
-    mvwprintw(win, 15, 2, "a       Toggle full command");
-    mvwprintw(win, 16, 2, "H       Toggle thread view");
-    mvwprintw(win, 17, 2, "i       Toggle idle processes");
-    mvwprintw(win, 18, 2, "V       Toggle process tree");
-    mvwprintw(win, 19, 2, "z       Toggle colors");
-    mvwprintw(win, 20, 2, "S       Toggle cumulative time");
-    mvwprintw(win, 21, 2, "E       Cycle memory units");
-    mvwprintw(win, 22, 2, "t       Toggle CPU summary");
-    mvwprintw(win, 23, 2, "m       Toggle memory summary");
-    mvwprintw(win, 24, 2, "f       Field manager");
-    mvwprintw(win, 25, 2, "n       Set entry limit");
-    mvwprintw(win, 26, 2, "W       Save config");
-    mvwprintw(win, 27, 2, "SPACE    Pause/resume");
-    mvwprintw(win, 28, 2, "h       Show this help");
+    mvwprintw(win, 7, 2, "U       Sort by user");
+    mvwprintw(win, 8, 2, "B       Sort by start time");
+    mvwprintw(win, 9, 2, "F4/o    Toggle sort order");
+    mvwprintw(win, 10, 2, "+/-     Adjust refresh delay");
+    mvwprintw(win, 11, 2, "d/s     Set refresh delay");
+    mvwprintw(win, 12, 2, "/       Filter by command name");
+    mvwprintw(win, 13, 2, "u       Filter by user");
+    mvwprintw(win, 14, 2, "k       Send signal to a process");
+    mvwprintw(win, 15, 2, "r       Renice a process");
+    mvwprintw(win, 16, 2, "c       Toggle per-core view");
+    mvwprintw(win, 17, 2, "a       Toggle full command");
+    mvwprintw(win, 18, 2, "H       Toggle thread view");
+    mvwprintw(win, 19, 2, "i       Toggle idle processes");
+    mvwprintw(win, 20, 2, "V       Toggle process tree");
+    mvwprintw(win, 21, 2, "z       Toggle colors");
+    mvwprintw(win, 22, 2, "S       Toggle cumulative time");
+    mvwprintw(win, 23, 2, "E       Cycle memory units");
+    mvwprintw(win, 24, 2, "t       Toggle CPU summary");
+    mvwprintw(win, 25, 2, "m       Toggle memory summary");
+    mvwprintw(win, 26, 2, "f       Field manager");
+    mvwprintw(win, 27, 2, "n       Set entry limit");
+    mvwprintw(win, 28, 2, "W       Save config");
+    mvwprintw(win, 29, 2, "SPACE    Pause/resume");
+    mvwprintw(win, 30, 2, "h       Show this help");
     mvwprintw(win, h - 2, 2, "Press any key to return");
     wrefresh(win);
     nodelay(stdscr, FALSE);
@@ -506,6 +520,14 @@ static void set_sort(enum sort_field sort) {
     case SORT_MEM:
         compare_procs = cmp_proc_mem;
         set_sort_descending(1);
+        break;
+    case SORT_USER:
+        compare_procs = cmp_proc_user;
+        set_sort_descending(0);
+        break;
+    case SORT_START:
+        compare_procs = cmp_proc_start;
+        set_sort_descending(0);
         break;
     case SORT_TIME:
         compare_procs = cmp_proc_time;
@@ -831,6 +853,10 @@ int run_ui(unsigned int delay_ms, enum sort_field sort,
             set_sort(SORT_TIME);
         } else if (ch == 'P') {
             set_sort(SORT_PRI);
+        } else if (ch == 'U') {
+            set_sort(SORT_USER);
+        } else if (ch == 'B') {
+            set_sort(SORT_START);
         } else if (ch == 'c') {
             show_cores = !show_cores;
         } else if (ch == 'a') {

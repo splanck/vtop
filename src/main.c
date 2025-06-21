@@ -31,7 +31,7 @@ static void usage(const char *prog) {
     printf("Usage: %s [-d seconds] [-S] [--accum] [-s column] [-E unit] [-e unit] [-b iter] [-n iter] [-m max] [-p pid,...] [-w cols]\n", prog);
     printf("  -d, --delay SECS   Refresh delay in seconds (default 3)\n");
     printf("  -S, --secure       Disable signaling and renicing tasks\n");
-    printf("  -s, --sort  COL    Sort column: pid,cpu,mem,time,pri (default pid)\n");
+    printf("  -s, --sort  COL    Sort column: pid,cpu,mem,user,start,time,pri (default pid)\n");
     printf("  -E, --scale-summary-mem UNIT  Memory units for summary (k,m,g,t,p,e)\n");
     printf("  -e, --scale-task-mem UNIT     Memory units for processes (k,m,g,t,p,e)\n");
     printf("  -b, --batch ITER   Batch mode iterations (0=loop forever)\n");
@@ -58,6 +58,14 @@ static int run_batch(unsigned int delay_ms, enum sort_field sort,
     case SORT_MEM:
         compare = cmp_proc_mem;
         set_sort_descending(1);
+        break;
+    case SORT_USER:
+        compare = cmp_proc_user;
+        set_sort_descending(0);
+        break;
+    case SORT_START:
+        compare = cmp_proc_start;
+        set_sort_descending(0);
         break;
     case SORT_TIME:
         compare = cmp_proc_time;
@@ -171,6 +179,10 @@ int main(int argc, char *argv[]) {
                 sort = SORT_CPU;
             else if (strcmp(optarg, "mem") == 0)
                 sort = SORT_MEM;
+            else if (strcmp(optarg, "user") == 0)
+                sort = SORT_USER;
+            else if (strcmp(optarg, "start") == 0)
+                sort = SORT_START;
             else if (strcmp(optarg, "time") == 0)
                 sort = SORT_TIME;
             else if (strcmp(optarg, "pri") == 0 ||
