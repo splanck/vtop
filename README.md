@@ -52,6 +52,7 @@ Use `-i`/`--hide-idle` to start with idle processes hidden.
 Use `-H`/`--threads` to show individual threads instead of processes.
 Use `--irix` to display CPU usage relative to a single CPU.
 Use `--per-cpu` to show per-core CPU usage by default.
+Use `-V`/`--version` to print the vtop version and exit.
 
 Use `-u USER` or `-U USER` to show only processes owned by `USER`.
 
