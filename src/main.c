@@ -28,7 +28,7 @@ static enum mem_unit parse_unit(const char *arg) {
 }
 
 static void usage(const char *prog) {
-    printf("Usage: %s [-d seconds] [-S] [-a] [-i] [--accum] [-s column] [-E unit] [-e unit] [-b iter] [-n iter] [-m max] [-p pid,...] [-w cols]\n", prog);
+    printf("Usage: %s [-d seconds] [-S] [-a] [-i] [--accum] [-s column] [-E unit] [-e unit] [-b iter] [-n iter] [-m max] [-p pid,...] [-u user] [-U user] [-w cols]\n", prog);
     printf("  -d, --delay SECS   Refresh delay in seconds (default 3)\n");
     printf("  -S, --secure       Disable signaling and renicing tasks\n");
     printf("  -s, --sort  COL    Sort column: pid,cpu,mem,user,start,time,pri (default pid)\n");
@@ -37,6 +37,8 @@ static void usage(const char *prog) {
     printf("  -b, --batch ITER   Batch mode iterations (0=loop forever)\n");
     printf("  -n, --iterations N Number of refresh cycles (0=run forever)\n");
     printf("  -p, --pid   LIST   Comma-separated PIDs to monitor\n");
+    printf("  -u USER            Show only tasks owned by USER\n");
+    printf("  -U USER            Same as -u\n");
     printf("  -m, --max   N     Maximum number of processes to display (0=all)\n");
     printf("  -w, --width COLS  Override screen width in columns\n");
     printf("  -a, --cmdline     Display the full command line by default\n");
@@ -160,6 +162,8 @@ int main(int argc, char *argv[]) {
         {"iterations", required_argument, NULL, 'n'},
         {"max", required_argument, NULL, 'm'},
         {"pid", required_argument, NULL, 'p'},
+        {"user", required_argument, NULL, 'u'},
+        {"euser", required_argument, NULL, 'U'},
         {"width", required_argument, NULL, 'w'},
         {"cmdline", no_argument, NULL, 'a'},
         {"hide-idle", no_argument, NULL, 'i'},
@@ -176,7 +180,7 @@ int main(int argc, char *argv[]) {
     int batch = 0;
     unsigned int iterations = 0;
     int columns = 0;
-    while ((opt = getopt_long(argc, argv, "d:Ss:E:e:b:n:m:p:w:aih", long_opts, &idx)) != -1) {
+    while ((opt = getopt_long(argc, argv, "d:Ss:E:e:b:n:m:p:u:U:w:aih", long_opts, &idx)) != -1) {
         switch (opt) {
         case 'd':
             delay_ms = (unsigned int)(strtod(optarg, NULL) * 1000);
@@ -230,6 +234,10 @@ int main(int argc, char *argv[]) {
             break;
         case 'p':
             set_pid_filter(optarg);
+            break;
+        case 'u':
+        case 'U':
+            set_user_filter(optarg);
             break;
         case 'w':
             columns = atoi(optarg);

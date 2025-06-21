@@ -75,6 +75,7 @@ monitoring tools without requiring additional dependencies.
   process name.
 - `-i`/`--hide-idle` &mdash; Do not list tasks with zero CPU usage.
 - `--irix` &mdash; Display per-process CPU usage relative to one CPU.
+- `-u USER`, `-U USER` &mdash; Show only processes owned by `USER`.
 
 Examples:
 
@@ -86,6 +87,7 @@ vtop -S           # run without ability to signal or renice
 vtop --accum      # include child CPU time in display
 vtop -a           # show full command line at startup
 vtop -i           # hide idle processes on launch
+vtop -u alice     # show only tasks owned by alice
 ```
 
 The interactive display lists PID, USER, command name, state,
