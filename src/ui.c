@@ -41,6 +41,7 @@ static int show_forest;
 static int show_cpu_summary = 1;
 static int show_mem_summary = 1;
 static int highlight_sort = 1;
+static int show_bold;
 
 #define CP_SORT 1
 #define CP_RUNNING 2
@@ -346,6 +347,8 @@ static void draw_process_row(int row, const struct process_info *p) {
     enum column_id sort_col = get_sort_column();
     if (color_scheme && p->state == 'R')
         attron(COLOR_PAIR(CP_RUNNING));
+    if (show_bold)
+        attron(A_BOLD);
     int order[COL_COUNT];
     build_ordered_indices(order);
     for (int pidx = 0; pidx < COL_COUNT; pidx++) {
@@ -430,6 +433,8 @@ static void draw_process_row(int row, const struct process_info *p) {
             attroff(COLOR_PAIR(CP_SORT));
         x += columns[i].width + 1;
     }
+    if (show_bold)
+        attroff(A_BOLD);
     if (color_scheme && p->state == 'R')
         attroff(COLOR_PAIR(CP_RUNNING));
 }
@@ -493,7 +498,7 @@ static void field_manager(void) {
 }
 
 static void show_help(void) {
-    const int h = 35;
+    const int h = 36;
     const int w = 52;
     int startx = COLS > w ? (COLS - w) / 2 : 0;
     if (startx < 0)
@@ -526,16 +531,17 @@ static void show_help(void) {
     mvwprintw(win, 22, 2, "V       Toggle process tree");
     mvwprintw(win, 23, 2, "Z       Cycle color scheme");
     mvwprintw(win, 24, 2, "x       Toggle sort highlight");
-    mvwprintw(win, 25, 2, "S       Toggle cumulative time");
-    mvwprintw(win, 26, 2, "I       Toggle Irix mode");
-    mvwprintw(win, 27, 2, "E       Cycle memory units");
-    mvwprintw(win, 28, 2, "t       Toggle CPU summary");
-    mvwprintw(win, 29, 2, "m       Toggle memory summary");
-    mvwprintw(win, 30, 2, "f       Field manager");
-    mvwprintw(win, 31, 2, "n       Set entry limit");
-    mvwprintw(win, 32, 2, "W       Save config");
-    mvwprintw(win, 33, 2, "SPACE    Pause/resume");
-    mvwprintw(win, 34, 2, "h       Show this help");
+    mvwprintw(win, 25, 2, "b       Toggle bold text");
+    mvwprintw(win, 26, 2, "S       Toggle cumulative time");
+    mvwprintw(win, 27, 2, "I       Toggle Irix mode");
+    mvwprintw(win, 28, 2, "E       Cycle memory units");
+    mvwprintw(win, 29, 2, "t       Toggle CPU summary");
+    mvwprintw(win, 30, 2, "m       Toggle memory summary");
+    mvwprintw(win, 31, 2, "f       Field manager");
+    mvwprintw(win, 32, 2, "n       Set entry limit");
+    mvwprintw(win, 33, 2, "W       Save config");
+    mvwprintw(win, 34, 2, "SPACE    Pause/resume");
+    mvwprintw(win, 35, 2, "h       Show this help");
     mvwprintw(win, h - 2, 2, "Press any key to return");
     wrefresh(win);
     nodelay(stdscr, FALSE);
@@ -918,6 +924,8 @@ int run_ui(unsigned int delay_ms, enum sort_field sort,
                 attrset(A_NORMAL);
         } else if (ch == 'x') {
             highlight_sort = !highlight_sort;
+        } else if (ch == 'b') {
+            show_bold = !show_bold;
         } else if (ch == 'S') {
             set_show_accum_time(!get_show_accum_time());
         } else if (ch == 'I') {
