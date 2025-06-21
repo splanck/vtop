@@ -60,6 +60,7 @@ enum column_id {
     COL_VSIZE,
     COL_RSS,
     COL_RSSP,
+    COL_CPU,
     COL_CPUP,
     COL_TIME,
     COL_START,
@@ -88,9 +89,10 @@ static struct column_def columns[COL_COUNT] = {
     {COL_VSIZE, "VSIZE",   8, 0, 1, 7},
     {COL_RSS,   "RSS",     5, 0, 1, 8},
     {COL_RSSP,  "RSS%",    6, 0, 1, 9},
-    {COL_CPUP,  "CPU%",    6, 0, 1,10},
-    {COL_TIME,  "TIME",    8, 0, 1,11},
-    {COL_START, "START",   8, 1, 1,12}
+    {COL_CPU,   "CPU",     3, 0, 1,10},
+    {COL_CPUP,  "CPU%",    6, 0, 1,11},
+    {COL_TIME,  "TIME",    8, 0, 1,12},
+    {COL_START, "START",   8, 1, 1,13}
 };
 
 void ui_list_fields(void) {
@@ -413,6 +415,10 @@ static void draw_process_row(int row, const struct process_info *p) {
         case COL_RSSP:
             mvprintw(row, x, columns[i].left ? "%-*.2f" : "%*.2f",
                      columns[i].width, p->rss_percent);
+            break;
+        case COL_CPU:
+            mvprintw(row, x, columns[i].left ? "%-*d" : "%*d",
+                     columns[i].width, p->cpu);
             break;
         case COL_CPUP:
             mvprintw(row, x, columns[i].left ? "%-*.2f" : "%*.2f",

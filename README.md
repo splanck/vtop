@@ -91,8 +91,8 @@ Additional shortcuts:
 - Press `space` to pause or resume updates.
 - Press `h` to open a small help window with available shortcuts.
 - Press `W` to save the current configuration.
-- Press `f` to open the field manager. Use `space` to toggle visibility and
-  `h`/`l` to move the selected column left or right.
+- Press `f` to open the field manager. Use `space` to toggle visibility,
+including the new CPU column, and `h`/`l` to move the selected column left or right.
 
 These controls operate on live processes. Ensure you have permission to
 signal or renice the target process. Running as root can terminate or slow
@@ -109,7 +109,7 @@ configuration manually.
 
 Example output with the ncurses interface:
 
-The table shows PID, USER, process name, state, priority,
+The table shows PID, CPU, USER, process name, state, priority,
 nice value, virtual memory size, resident set size, memory
 usage percentage, CPU usage, total CPU time and the process
 start time.

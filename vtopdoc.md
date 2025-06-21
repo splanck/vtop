@@ -93,7 +93,7 @@ vtop -u alice     # show only tasks owned by alice
 vtop -C ssh       # display only commands containing "ssh"
 ```
 
-The interactive display lists PID, USER, command name, state,
+The interactive display lists PID, CPU, USER, command name, state,
 priority, nice value, virtual memory size, resident set size,
 memory usage percentage, CPU usage, total CPU time and the process
 start time.
@@ -114,8 +114,8 @@ Process management shortcuts are also available:
 - `B` &ndash; sort by start time.
 - `M` &ndash; sort by memory usage.
 - `h` &ndash; display a help window showing available shortcuts.
-- `f` &ndash; open the field manager to hide columns or reorder them
-  with `h`/`l`.
+- `f` &ndash; open the field manager to hide columns or reorder them,
+  including the CPU column, with `h`/`l`.
 
 Use caution when running with elevated privileges because killing or
 renicing critical processes can destabilize the system.
