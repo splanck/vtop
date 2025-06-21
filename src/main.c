@@ -28,7 +28,7 @@ static enum mem_unit parse_unit(const char *arg) {
 }
 
 static void usage(const char *prog) {
-    printf("Usage: %s [-d seconds] [-S] [-s column] [-E unit] [-e unit] [-b iter] [-n iter] [-m max] [-p pid,...] [-w cols]\n", prog);
+    printf("Usage: %s [-d seconds] [-S] [--accum] [-s column] [-E unit] [-e unit] [-b iter] [-n iter] [-m max] [-p pid,...] [-w cols]\n", prog);
     printf("  -d, --delay SECS   Refresh delay in seconds (default 3)\n");
     printf("  -S, --secure       Disable signaling and renicing tasks\n");
     printf("  -s, --sort  COL    Sort column: pid,cpu,mem,time,pri (default pid)\n");
@@ -39,6 +39,7 @@ static void usage(const char *prog) {
     printf("  -p, --pid   LIST   Comma-separated PIDs to monitor\n");
     printf("  -m, --max   N     Maximum number of processes to display (0=all)\n");
     printf("  -w, --width COLS  Override screen width in columns\n");
+    printf("      --accum       Include child CPU time in TIME column\n");
 }
 
 static int run_batch(unsigned int delay_ms, enum sort_field sort,
@@ -145,6 +146,7 @@ int main(int argc, char *argv[]) {
         {"max", required_argument, NULL, 'm'},
         {"pid", required_argument, NULL, 'p'},
         {"width", required_argument, NULL, 'w'},
+        {"accum", no_argument, NULL, 1},
         {"help", no_argument, NULL, 'h'},
         {NULL, 0, NULL, 0}
     };
@@ -160,6 +162,9 @@ int main(int argc, char *argv[]) {
             break;
         case 'S':
             secure_mode = 1;
+            break;
+        case 1:
+            set_show_accum_time(1);
             break;
         case 's':
             if (strcmp(optarg, "cpu") == 0)

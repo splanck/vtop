@@ -121,4 +121,8 @@ int get_thread_mode(void);
 void set_show_idle(int on);
 int get_show_idle(void);
 
+/* accumulate child CPU time in cpu_time */
+void set_show_accum_time(int on);
+int get_show_accum_time(void);
+
 #endif /* PROC_H */

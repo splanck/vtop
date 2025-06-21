@@ -42,6 +42,7 @@ truncated to fit.
 The `-S`/`--secure` flag disables sending signals and changing
 process priorities. Use this when running vtop in restricted
 environments.
+The `--accum` option displays CPU time including dead children.
 
 When running the ncurses interface you can press `F3` or `>` to cycle to
 the next sort field and `<` to go back.
@@ -58,6 +59,7 @@ Additional shortcuts:
 - Press `H` to toggle thread view (show individual threads).
 - Press `i` to hide or show processes with zero CPU usage.
 - Press `z` to toggle color output.
+- Press `S` to toggle cumulative CPU time.
 - Press `E` to cycle through memory units used for display.
 - Press `F4` or `o` to change the sort direction.
 - Press `space` to pause or resume updates.

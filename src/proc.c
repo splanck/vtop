@@ -37,6 +37,7 @@ static int sort_descending;
 /* show threads instead of processes */
 static int thread_mode;
 static int show_idle = 1;
+static int show_accum_time;
 
 void set_sort_descending(int desc) { sort_descending = desc != 0; }
 int get_sort_descending(void) { return sort_descending; }
@@ -46,6 +47,9 @@ int get_thread_mode(void) { return thread_mode; }
 
 void set_show_idle(int on) { show_idle = on != 0; }
 int get_show_idle(void) { return show_idle; }
+
+void set_show_accum_time(int on) { show_accum_time = on != 0; }
+int get_show_accum_time(void) { return show_accum_time; }
 
 void set_name_filter(const char *substr) {
     if (substr && *substr) {
@@ -385,13 +389,14 @@ size_t list_processes(struct process_info *buf, size_t max) {
                     char comm[256];
                     char state;
                     int ppid;
-                    unsigned long long utime, stime, starttime;
+                    unsigned long long utime, stime, cutime, cstime, starttime;
                     long priority, niceval;
                     unsigned long long vsize;
                     long rss;
                     sscanf(line,
-                           "%*d (%255[^)]) %c %d %*s %*s %*s %*s %*s %*s %*s %*s %*s %*s %llu %llu %*s %*s %ld %ld %*s %*s %llu %llu %ld",
-                           comm, &state, &ppid, &utime, &stime, &priority, &niceval, &starttime, &vsize, &rss);
+                           "%*d (%255[^)]) %c %d %*s %*s %*s %*s %*s %*s %*s %*s %*s %*s %llu %llu %llu %llu %ld %ld %*s %*s %llu %llu %ld",
+                           comm, &state, &ppid, &utime, &stime, &cutime, &cstime,
+                           &priority, &niceval, &starttime, &vsize, &rss);
 
                     unsigned int uid = 0;
                     snprintf(path, sizeof(path), "/proc/%ld/status", pid);
@@ -485,7 +490,10 @@ size_t list_processes(struct process_info *buf, size_t max) {
                     buf[count].utime = utime;
                     buf[count].stime = stime;
                     buf[count].cpu_usage = usage;
-                    buf[count].cpu_time = (double)(utime + stime) / (double)clk_tck;
+                    unsigned long long tt = utime + stime;
+                    if (get_show_accum_time())
+                        tt += cutime + cstime;
+                    buf[count].cpu_time = (double)tt / (double)clk_tck;
                     time_t start_epoch = (time_t)(boot_time +
                                                  (double)starttime / (double)clk_tck);
                     struct tm *tm = localtime(&start_epoch);
@@ -512,13 +520,14 @@ size_t list_processes(struct process_info *buf, size_t max) {
                 char comm[256];
                 char state;
                 int ppid;
-                unsigned long long utime, stime, starttime;
+                unsigned long long utime, stime, cutime, cstime, starttime;
                 long priority, niceval;
                 unsigned long long vsize;
                 long rss;
                 sscanf(line,
-                       "%*d (%255[^)]) %c %d %*s %*s %*s %*s %*s %*s %*s %*s %*s %*s %llu %llu %*s %*s %ld %ld %*s %*s %llu %llu %ld",
-                       comm, &state, &ppid, &utime, &stime, &priority, &niceval, &starttime, &vsize, &rss);
+                       "%*d (%255[^)]) %c %d %*s %*s %*s %*s %*s %*s %*s %*s %*s %*s %llu %llu %llu %llu %ld %ld %*s %*s %llu %llu %ld",
+                       comm, &state, &ppid, &utime, &stime, &cutime, &cstime,
+                       &priority, &niceval, &starttime, &vsize, &rss);
 
                 unsigned int uid = 0;
                 snprintf(path, sizeof(path), "/proc/%ld/status", pid);
@@ -612,7 +621,10 @@ size_t list_processes(struct process_info *buf, size_t max) {
                 buf[count].utime = utime;
                 buf[count].stime = stime;
                 buf[count].cpu_usage = usage;
-                buf[count].cpu_time = (double)(utime + stime) / (double)clk_tck;
+                unsigned long long tt = utime + stime;
+                if (get_show_accum_time())
+                    tt += cutime + cstime;
+                buf[count].cpu_time = (double)tt / (double)clk_tck;
                 time_t start_epoch = (time_t)(boot_time +
                                              (double)starttime / (double)clk_tck);
                 struct tm *tm = localtime(&start_epoch);
