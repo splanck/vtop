@@ -7,6 +7,7 @@
 #include "version.h"
 #include "ui.h"
 #include "proc.h"
+#include "control.h"
 
 /* maximum number of process entries to display (0 = unlimited) */
 static size_t max_entries;
@@ -27,8 +28,9 @@ static enum mem_unit parse_unit(const char *arg) {
 }
 
 static void usage(const char *prog) {
-    printf("Usage: %s [-d seconds] [-s column] [-E unit] [-e unit] [-b iter] [-n iter] [-m max] [-p pid,...] [-w cols]\n", prog);
+    printf("Usage: %s [-d seconds] [-S] [-s column] [-E unit] [-e unit] [-b iter] [-n iter] [-m max] [-p pid,...] [-w cols]\n", prog);
     printf("  -d, --delay SECS   Refresh delay in seconds (default 3)\n");
+    printf("  -S, --secure       Disable signaling and renicing tasks\n");
     printf("  -s, --sort  COL    Sort column: pid,cpu,mem,time,pri (default pid)\n");
     printf("  -E, --scale-summary-mem UNIT  Memory units for summary (k,m,g,t,p,e)\n");
     printf("  -e, --scale-task-mem UNIT     Memory units for processes (k,m,g,t,p,e)\n");
@@ -134,6 +136,7 @@ int main(int argc, char *argv[]) {
 
     static struct option long_opts[] = {
         {"delay", required_argument, NULL, 'd'},
+        {"secure", no_argument, NULL, 'S'},
         {"sort", required_argument, NULL, 's'},
         {"scale-summary-mem", required_argument, NULL, 'E'},
         {"scale-task-mem", required_argument, NULL, 'e'},
@@ -150,10 +153,13 @@ int main(int argc, char *argv[]) {
     int batch = 0;
     unsigned int iterations = 0;
     int columns = 0;
-    while ((opt = getopt_long(argc, argv, "d:s:E:e:b:n:m:p:w:h", long_opts, &idx)) != -1) {
+    while ((opt = getopt_long(argc, argv, "d:Ss:E:e:b:n:m:p:w:h", long_opts, &idx)) != -1) {
         switch (opt) {
         case 'd':
             delay_ms = (unsigned int)(strtod(optarg, NULL) * 1000);
+            break;
+        case 'S':
+            secure_mode = 1;
             break;
         case 's':
             if (strcmp(optarg, "cpu") == 0)

@@ -66,6 +66,8 @@ monitoring tools without requiring additional dependencies.
   `3` seconds just like `top`.
 - `-s COL` &mdash; Choose the column to sort by. Supported values are
   `pid`, `cpu` and `mem`. The default is `pid`.
+- `-S` &mdash; Enable secure mode which disables signaling and renicing
+  processes.
 
 Examples:
 
@@ -73,6 +75,7 @@ Examples:
 vtop              # run with defaults (3s delay, sort by pid)
 vtop -d 1         # update every second
 vtop -s cpu       # sort processes by CPU usage
+vtop -S           # run without ability to signal or renice
 ```
 
 The interactive display lists PID, USER, command name, state,
