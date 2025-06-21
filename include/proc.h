@@ -87,6 +87,8 @@ struct process_info {
     double start_timestamp;
     /* Process start time as HH:MM:SS */
     char start_time[16];
+    /* Processor this task last ran on */
+    int cpu;
     /* Nesting level for forest view */
     int level;
 };

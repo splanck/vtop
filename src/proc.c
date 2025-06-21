@@ -397,10 +397,12 @@ size_t list_processes(struct process_info *buf, size_t max) {
                     long priority, niceval;
                     unsigned long long vsize;
                     long rss;
+                    int cpu = 0;
                     sscanf(line,
-                           "%*d (%255[^)]) %c %d %*s %*s %*s %*s %*s %*s %*s %*s %*s %*s %llu %llu %llu %llu %ld %ld %*s %*s %llu %llu %ld",
+                           "%*d (%255[^)]) %c %d %*s %*s %*s %*s %*s %*s %*s %*s %*s %*s %llu %llu %llu %llu %ld %ld %*s %*s %llu %llu %ld"
+                           " %*s %*s %*s %*s %*s %*s %*s %*s %*s %*s %*s %*s %*s %d",
                            comm, &state, &ppid, &utime, &stime, &cutime, &cstime,
-                           &priority, &niceval, &starttime, &vsize, &rss);
+                           &priority, &niceval, &starttime, &vsize, &rss, &cpu);
 
                     unsigned int uid = 0;
                     snprintf(path, sizeof(path), "/proc/%ld/status", pid);
@@ -513,6 +515,7 @@ size_t list_processes(struct process_info *buf, size_t max) {
                         strncpy(buf[count].start_time, "??:??:??",
                                 sizeof(buf[count].start_time));
                     buf[count].start_timestamp = (double)start_epoch;
+                    buf[count].cpu = cpu;
                     buf[count].level = 0;
                     count++;
                 }
@@ -534,10 +537,12 @@ size_t list_processes(struct process_info *buf, size_t max) {
                 long priority, niceval;
                 unsigned long long vsize;
                 long rss;
+                int cpu = 0;
                 sscanf(line,
-                       "%*d (%255[^)]) %c %d %*s %*s %*s %*s %*s %*s %*s %*s %*s %*s %llu %llu %llu %llu %ld %ld %*s %*s %llu %llu %ld",
+                       "%*d (%255[^)]) %c %d %*s %*s %*s %*s %*s %*s %*s %*s %*s %*s %llu %llu %llu %llu %ld %ld %*s %*s %llu %llu %ld"
+                       " %*s %*s %*s %*s %*s %*s %*s %*s %*s %*s %*s %*s %*s %d",
                        comm, &state, &ppid, &utime, &stime, &cutime, &cstime,
-                       &priority, &niceval, &starttime, &vsize, &rss);
+                       &priority, &niceval, &starttime, &vsize, &rss, &cpu);
 
                 unsigned int uid = 0;
                 snprintf(path, sizeof(path), "/proc/%ld/status", pid);
@@ -650,6 +655,7 @@ size_t list_processes(struct process_info *buf, size_t max) {
                     strncpy(buf[count].start_time, "??:??:??",
                             sizeof(buf[count].start_time));
                 buf[count].start_timestamp = (double)start_epoch;
+                buf[count].cpu = cpu;
                 buf[count].level = 0;
                 count++;
             }
