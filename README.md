@@ -65,7 +65,7 @@ Additional shortcuts:
 - Press `a` to toggle between the short command name and the full command line.
 - Press `H` to toggle thread view (show individual threads).
 - Press `i` to hide or show processes with zero CPU usage.
-- Press `z` to toggle color output.
+- Press `Z` to cycle through color schemes.
 - Press `S` to toggle cumulative CPU time.
 - Press `I` to toggle Irix mode (no CPU scaling).
 - Press `E` to cycle through memory units used for display.
@@ -86,7 +86,7 @@ critical system tasks, so use with care.
 
 When the ncurses interface exits it writes the current options to
 `~/.vtoprc`. This file stores the refresh interval, sort column, the
-enabled columns and their order as well as the chosen memory units. On the
+enabled columns and their order, the chosen memory units and the active color scheme. On the
 next launch, vtop reads this file to restore the
 previous settings. You can also press `W` at any time to save the
 configuration manually.
