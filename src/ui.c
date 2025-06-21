@@ -126,6 +126,8 @@ void ui_set_show_full_cmd(int on) { show_full_cmd = on != 0; }
 
 void ui_set_show_idle(int on) { show_idle = on != 0; }
 
+void ui_set_show_cores(int on) { show_cores = on != 0; }
+
 static void apply_color_scheme(void) {
     if (!has_colors())
         return;
