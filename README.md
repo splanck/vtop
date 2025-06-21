@@ -86,6 +86,7 @@ Additional shortcuts:
 - Press `U` to sort by user.
 - Press `B` to sort by start time.
 - Press `C` to sort by CPU usage.
+- Press `M` to sort by memory usage.
 - Press `space` to pause or resume updates.
 - Press `h` to open a small help window with available shortcuts.
 - Press `W` to save the current configuration.
