@@ -129,14 +129,15 @@ static int run_batch(unsigned int delay_ms, enum sort_field sort,
                100.0 - cs.idle_percent, cs.user_percent, cs.system_percent,
                cs.idle_percent, mem_usage, swap_used, swap_total,
                mem_unit_suffix(summary_unit), swap_usage, delay_ms / 1000.0);
-        printf("PID      CPU  USER     NAME                     STATE PRI  NICE  VSIZE    RSS  RSS%%  CPU%%   TIME     START\n");
+        printf("PID      CPU  USER     NAME                     STATE PRI  NICE  VSIZE    RSS   SHR  RSS%%  CPU%%   TIME     START\n");
         for (size_t i = 0; i < count; i++) {
             double vsz = procs[i].vsize / 1024.0; /* bytes to KB */
             vsz = scale_kb((unsigned long long)vsz, proc_unit);
             double rss = scale_kb((unsigned long long)procs[i].rss, proc_unit);
-            printf("%-8d %3d %-8s %-25s %c %4ld %5ld %8.1f %5.1f %6.2f %6.2f %8.0f %-8s\n",
+            double shr = scale_kb(procs[i].shared, proc_unit);
+            printf("%-8d %3d %-8s %-25s %c %4ld %5ld %8.1f %5.1f %5.1f %6.2f %6.2f %8.0f %-8s\n",
                    procs[i].pid, procs[i].cpu, procs[i].user, procs[i].name, procs[i].state,
-                   procs[i].priority, procs[i].nice, vsz, rss,
+                   procs[i].priority, procs[i].nice, vsz, rss, shr,
                    procs[i].rss_percent, procs[i].cpu_usage,
                    procs[i].cpu_time, procs[i].start_time);
         }

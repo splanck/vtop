@@ -496,6 +496,16 @@ size_t list_processes(struct process_info *buf, size_t max) {
                     buf[count].vsize = vsize;
                     long rss_kb = rss * page_kb;
                     buf[count].rss = rss_kb;
+                    unsigned long long shared_kb = 0;
+                    snprintf(path, sizeof(path), "/proc/%ld/statm", pid);
+                    FILE *fm = fopen(path, "r");
+                    if (fm) {
+                        unsigned long dummy, res, shr;
+                        if (fscanf(fm, "%lu %lu %lu", &dummy, &res, &shr) >= 3)
+                            shared_kb = shr * page_kb;
+                        fclose(fm);
+                    }
+                    buf[count].shared = shared_kb;
                     buf[count].rss_percent = 100.0 * (double)rss_kb /
                                            (double)ms.total;
                     buf[count].utime = utime;
@@ -636,6 +646,16 @@ size_t list_processes(struct process_info *buf, size_t max) {
                 buf[count].vsize = vsize;
                 long rss_kb = rss * page_kb;
                 buf[count].rss = rss_kb;
+                unsigned long long shared_kb = 0;
+                snprintf(path, sizeof(path), "/proc/%ld/statm", pid);
+                FILE *fm = fopen(path, "r");
+                if (fm) {
+                    unsigned long dummy, res, shr;
+                    if (fscanf(fm, "%lu %lu %lu", &dummy, &res, &shr) >= 3)
+                        shared_kb = shr * page_kb;
+                    fclose(fm);
+                }
+                buf[count].shared = shared_kb;
                 buf[count].rss_percent = 100.0 * (double)rss_kb /
                                        (double)ms.total;
                 buf[count].utime = utime;
