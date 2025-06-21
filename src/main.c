@@ -28,7 +28,7 @@ static enum mem_unit parse_unit(const char *arg) {
 }
 
 static void usage(const char *prog) {
-    printf("Usage: %s [-d seconds] [-S] [--accum] [-s column] [-E unit] [-e unit] [-b iter] [-n iter] [-m max] [-p pid,...] [-w cols]\n", prog);
+    printf("Usage: %s [-d seconds] [-S] [-a] [-i] [--accum] [-s column] [-E unit] [-e unit] [-b iter] [-n iter] [-m max] [-p pid,...] [-w cols]\n", prog);
     printf("  -d, --delay SECS   Refresh delay in seconds (default 3)\n");
     printf("  -S, --secure       Disable signaling and renicing tasks\n");
     printf("  -s, --sort  COL    Sort column: pid,cpu,mem,user,start,time,pri (default pid)\n");
@@ -39,6 +39,8 @@ static void usage(const char *prog) {
     printf("  -p, --pid   LIST   Comma-separated PIDs to monitor\n");
     printf("  -m, --max   N     Maximum number of processes to display (0=all)\n");
     printf("  -w, --width COLS  Override screen width in columns\n");
+    printf("  -a, --cmdline     Display the full command line by default\n");
+    printf("  -i, --hide-idle   Hide processes with zero CPU usage\n");
     printf("      --accum       Include child CPU time in TIME column\n");
 }
 
@@ -155,6 +157,8 @@ int main(int argc, char *argv[]) {
         {"max", required_argument, NULL, 'm'},
         {"pid", required_argument, NULL, 'p'},
         {"width", required_argument, NULL, 'w'},
+        {"cmdline", no_argument, NULL, 'a'},
+        {"hide-idle", no_argument, NULL, 'i'},
         {"accum", no_argument, NULL, 1},
         {"help", no_argument, NULL, 'h'},
         {NULL, 0, NULL, 0}
@@ -164,7 +168,7 @@ int main(int argc, char *argv[]) {
     int batch = 0;
     unsigned int iterations = 0;
     int columns = 0;
-    while ((opt = getopt_long(argc, argv, "d:Ss:E:e:b:n:m:p:w:h", long_opts, &idx)) != -1) {
+    while ((opt = getopt_long(argc, argv, "d:Ss:E:e:b:n:m:p:w:aih", long_opts, &idx)) != -1) {
         switch (opt) {
         case 'd':
             delay_ms = (unsigned int)(strtod(optarg, NULL) * 1000);
@@ -215,6 +219,16 @@ int main(int argc, char *argv[]) {
             columns = atoi(optarg);
             if (columns < 0)
                 columns = 0;
+            break;
+        case 'a':
+#ifdef WITH_UI
+            ui_set_show_full_cmd(1);
+#endif
+            break;
+        case 'i':
+#ifdef WITH_UI
+            ui_set_show_idle(0);
+#endif
             break;
         case 'h':
         default:

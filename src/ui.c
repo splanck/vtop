@@ -104,6 +104,10 @@ static enum mem_unit parse_mem_unit(const char *arg) {
     }
 }
 
+void ui_set_show_full_cmd(int on) { show_full_cmd = on != 0; }
+
+void ui_set_show_idle(int on) { show_idle = on != 0; }
+
 int ui_load_config(unsigned int *delay_ms, enum sort_field *sort) {
     const char *path = get_config_path();
     FILE *fp = fopen(path, "r");

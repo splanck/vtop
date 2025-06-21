@@ -70,6 +70,9 @@ monitoring tools without requiring additional dependencies.
 - `-S` &mdash; Enable secure mode which disables signaling and renicing
   processes.
 - `--accum` &mdash; Include child CPU time when displaying `TIME`.
+- `-a`/`--cmdline` &mdash; Show the full command line instead of just the
+  process name.
+- `-i`/`--hide-idle` &mdash; Do not list tasks with zero CPU usage.
 
 Examples:
 
@@ -79,6 +82,8 @@ vtop -d 1         # update every second
 vtop -s cpu       # sort processes by CPU usage
 vtop -S           # run without ability to signal or renice
 vtop --accum      # include child CPU time in display
+vtop -a           # show full command line at startup
+vtop -i           # hide idle processes on launch
 ```
 
 The interactive display lists PID, USER, command name, state,
