@@ -447,7 +447,7 @@ static void field_manager(void) {
 }
 
 static void show_help(void) {
-    const int h = 28;
+    const int h = 29;
     const int w = 52;
     int startx = COLS > w ? (COLS - w) / 2 : 0;
     if (startx < 0)
@@ -475,14 +475,15 @@ static void show_help(void) {
     mvwprintw(win, 17, 2, "i       Toggle idle processes");
     mvwprintw(win, 18, 2, "V       Toggle process tree");
     mvwprintw(win, 19, 2, "z       Toggle colors");
-    mvwprintw(win, 20, 2, "E       Cycle memory units");
-    mvwprintw(win, 21, 2, "t       Toggle CPU summary");
-    mvwprintw(win, 22, 2, "m       Toggle memory summary");
-    mvwprintw(win, 23, 2, "f       Field manager");
-    mvwprintw(win, 24, 2, "n       Set entry limit");
-    mvwprintw(win, 25, 2, "W       Save config");
-    mvwprintw(win, 26, 2, "SPACE    Pause/resume");
-    mvwprintw(win, 27, 2, "h       Show this help");
+    mvwprintw(win, 20, 2, "S       Toggle cumulative time");
+    mvwprintw(win, 21, 2, "E       Cycle memory units");
+    mvwprintw(win, 22, 2, "t       Toggle CPU summary");
+    mvwprintw(win, 23, 2, "m       Toggle memory summary");
+    mvwprintw(win, 24, 2, "f       Field manager");
+    mvwprintw(win, 25, 2, "n       Set entry limit");
+    mvwprintw(win, 26, 2, "W       Save config");
+    mvwprintw(win, 27, 2, "SPACE    Pause/resume");
+    mvwprintw(win, 28, 2, "h       Show this help");
     mvwprintw(win, h - 2, 2, "Press any key to return");
     wrefresh(win);
     nodelay(stdscr, FALSE);
@@ -846,6 +847,8 @@ int run_ui(unsigned int delay_ms, enum sort_field sort,
             color_enabled = !color_enabled;
             if (!color_enabled)
                 attrset(A_NORMAL);
+        } else if (ch == 'S') {
+            set_show_accum_time(!get_show_accum_time());
         } else if (ch == 'E') {
             summary_unit = next_mem_unit(summary_unit);
             proc_unit = next_mem_unit(proc_unit);

@@ -68,6 +68,7 @@ monitoring tools without requiring additional dependencies.
   `pid`, `cpu` and `mem`. The default is `pid`.
 - `-S` &mdash; Enable secure mode which disables signaling and renicing
   processes.
+- `--accum` &mdash; Include child CPU time when displaying `TIME`.
 
 Examples:
 
@@ -76,6 +77,7 @@ vtop              # run with defaults (3s delay, sort by pid)
 vtop -d 1         # update every second
 vtop -s cpu       # sort processes by CPU usage
 vtop -S           # run without ability to signal or renice
+vtop --accum      # include child CPU time in display
 ```
 
 The interactive display lists PID, USER, command name, state,
@@ -91,6 +93,7 @@ Process management shortcuts are also available:
 - `r` &ndash; prompt for a PID and new nice value to adjust process priority.
 - `c` &ndash; toggle per-core CPU usage display.
 - `a` &ndash; toggle between the short name and full command line.
+- `S` &ndash; toggle cumulative CPU time display.
 - `F4`/`o` &ndash; change the sort direction.
 - `h` &ndash; display a help window showing available shortcuts.
 
