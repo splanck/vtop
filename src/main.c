@@ -45,6 +45,7 @@ static void usage(const char *prog) {
     printf("  -i, --hide-idle   Hide processes with zero CPU usage\n");
     printf("  -H, --threads     Show individual threads instead of processes\n");
     printf("      --irix        Do not scale CPU%% by number of CPUs\n");
+    printf("      --per-cpu     Show per-core CPU usage\n");
     printf("      --accum       Include child CPU time in TIME column\n");
 #ifdef WITH_UI
     printf("      --list-fields  Print column names and exit\n");
@@ -172,6 +173,7 @@ int main(int argc, char *argv[]) {
 #ifdef WITH_UI
         {"list-fields", no_argument, NULL, 2},
 #endif
+        {"per-cpu", no_argument, NULL, '1'},
         {"accum", no_argument, NULL, 1},
         {"irix", no_argument, NULL, 3},
         {"help", no_argument, NULL, 'h'},
@@ -200,6 +202,11 @@ int main(int argc, char *argv[]) {
             return 0;
         case 3:
             set_cpu_irix_mode(1);
+            break;
+        case '1':
+#ifdef WITH_UI
+            ui_set_show_cores(1);
+#endif
             break;
         case 's':
             if (strcmp(optarg, "cpu") == 0)
