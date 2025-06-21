@@ -70,6 +70,7 @@ monitoring tools without requiring additional dependencies.
 - `-S` &mdash; Enable secure mode which disables signaling and renicing
   processes.
 - `--accum` &mdash; Include child CPU time when displaying `TIME`.
+- `--list-fields` &mdash; Print the names of all available columns and exit.
 - `-a`/`--cmdline` &mdash; Show the full command line instead of just the
   process name.
 - `-i`/`--hide-idle` &mdash; Do not list tasks with zero CPU usage.
