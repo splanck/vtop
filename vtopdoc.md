@@ -74,6 +74,7 @@ monitoring tools without requiring additional dependencies.
 - `-a`/`--cmdline` &mdash; Show the full command line instead of just the
   process name.
 - `-i`/`--hide-idle` &mdash; Do not list tasks with zero CPU usage.
+- `--irix` &mdash; Display per-process CPU usage relative to one CPU.
 
 Examples:
 
@@ -101,6 +102,7 @@ Process management shortcuts are also available:
 - `c` &ndash; toggle per-core CPU usage display.
 - `a` &ndash; toggle between the short name and full command line.
 - `S` &ndash; toggle cumulative CPU time display.
+- `I` &ndash; toggle Irix mode (CPU usage of each task not divided by CPU count).
 - `F4`/`o` &ndash; change the sort direction.
 - `U` &ndash; sort by user.
 - `B` &ndash; sort by start time.
