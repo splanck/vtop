@@ -51,6 +51,12 @@ command name.
 Use `-i`/`--hide-idle` to start with idle processes hidden.
 Use `--irix` to display CPU usage relative to a single CPU.
 
+Use `-u USER` or `-U USER` to show only processes owned by `USER`.
+
+```sh
+vtop -u alice
+```
+
 When running the ncurses interface you can press `F3` or `>` to cycle to
 the next sort field and `<` to go back.
 Press `F4` or `o` to toggle between ascending and descending order.
