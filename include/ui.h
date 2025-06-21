@@ -41,6 +41,9 @@ int ui_load_config(unsigned int *delay_ms, enum sort_field *sort);
 
 /* Save the current configuration to ~/.vtoprc. */
 int ui_save_config(unsigned int delay_ms, enum sort_field sort);
+
+/* Print the available column titles, one per line. */
+void ui_list_fields(void);
 #endif
 
 #endif /* UI_H */

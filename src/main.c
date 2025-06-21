@@ -42,6 +42,9 @@ static void usage(const char *prog) {
     printf("  -a, --cmdline     Display the full command line by default\n");
     printf("  -i, --hide-idle   Hide processes with zero CPU usage\n");
     printf("      --accum       Include child CPU time in TIME column\n");
+#ifdef WITH_UI
+    printf("      --list-fields  Print column names and exit\n");
+#endif
 }
 
 static int run_batch(unsigned int delay_ms, enum sort_field sort,
@@ -159,6 +162,9 @@ int main(int argc, char *argv[]) {
         {"width", required_argument, NULL, 'w'},
         {"cmdline", no_argument, NULL, 'a'},
         {"hide-idle", no_argument, NULL, 'i'},
+#ifdef WITH_UI
+        {"list-fields", no_argument, NULL, 2},
+#endif
         {"accum", no_argument, NULL, 1},
         {"help", no_argument, NULL, 'h'},
         {NULL, 0, NULL, 0}
@@ -179,6 +185,11 @@ int main(int argc, char *argv[]) {
         case 1:
             set_show_accum_time(1);
             break;
+        case 2:
+#ifdef WITH_UI
+            ui_list_fields();
+#endif
+            return 0;
         case 's':
             if (strcmp(optarg, "cpu") == 0)
                 sort = SORT_CPU;

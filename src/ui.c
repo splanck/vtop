@@ -79,6 +79,11 @@ static struct column_def columns[COL_COUNT] = {
     {COL_START, "START",   8, 1, 1,12}
 };
 
+void ui_list_fields(void) {
+    for (int i = 0; i < COL_COUNT; i++)
+        printf("%s\n", columns[i].title);
+}
+
 /* configuration file helpers */
 static const char *get_config_path(void) {
     const char *home = getenv("HOME");
