@@ -34,3 +34,16 @@ const char *mem_unit_suffix(enum mem_unit u) {
     }
 }
 
+enum mem_unit next_mem_unit(enum mem_unit u) {
+    switch (u) {
+    case MEM_UNIT_K: return MEM_UNIT_M;
+    case MEM_UNIT_M: return MEM_UNIT_G;
+    case MEM_UNIT_G: return MEM_UNIT_T;
+    case MEM_UNIT_T: return MEM_UNIT_P;
+    case MEM_UNIT_P: return MEM_UNIT_E;
+    case MEM_UNIT_E:
+    default:
+        return MEM_UNIT_K;
+    }
+}
+
