@@ -69,6 +69,8 @@ Additional shortcuts:
 - Press `space` to pause or resume updates.
 - Press `h` to open a small help window with available shortcuts.
 - Press `W` to save the current configuration.
+- Press `f` to open the field manager. Use `space` to toggle visibility and
+  `h`/`l` to move the selected column left or right.
 
 These controls operate on live processes. Ensure you have permission to
 signal or renice the target process. Running as root can terminate or slow
@@ -77,9 +79,9 @@ critical system tasks, so use with care.
 ## Configuration
 
 When the ncurses interface exits it writes the current options to
-`~/.vtoprc`. This file stores the refresh interval, sort column and the
-enabled columns as well as the chosen memory units. On the next launch,
-vtop reads this file to restore the
+`~/.vtoprc`. This file stores the refresh interval, sort column, the
+enabled columns and their order as well as the chosen memory units. On the
+next launch, vtop reads this file to restore the
 previous settings. You can also press `W` at any time to save the
 configuration manually.
 

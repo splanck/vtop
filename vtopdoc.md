@@ -98,6 +98,8 @@ Process management shortcuts are also available:
 - `U` &ndash; sort by user.
 - `B` &ndash; sort by start time.
 - `h` &ndash; display a help window showing available shortcuts.
+- `f` &ndash; open the field manager to hide columns or reorder them
+  with `h`/`l`.
 
 Use caution when running with elevated privileges because killing or
 renicing critical processes can destabilize the system.

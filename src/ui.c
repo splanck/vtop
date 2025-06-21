@@ -406,7 +406,7 @@ static void field_manager(void) {
     build_ordered_indices(order);
     int sel = 0;
     int h = n + 4;
-    int w = 20;
+    int w = 32;
     int startx = COLS > w ? (COLS - w) / 2 : 0;
     if (startx < 0)
         startx = 0;
@@ -419,7 +419,7 @@ static void field_manager(void) {
     int ch = 0;
     while (ch != '\n' && ch != 'q' && ch != 27) {
         box(win, 0, 0);
-        mvwprintw(win, 1, 2, "Toggle fields (u/d move):");
+        mvwprintw(win, 1, 2, "Toggle fields (u/d or h/l move):");
         for (int i = 0; i < n; i++) {
             int idx = order[i];
             mvwprintw(win, i + 2, 2, "[%c] %s", columns[idx].enabled ? 'x' : ' ',
@@ -434,7 +434,7 @@ static void field_manager(void) {
             sel++;
         else if (ch == ' ')
             columns[order[sel]].enabled = !columns[order[sel]].enabled;
-        else if ((ch == 'u' || ch == 'U') && sel > 0) {
+        else if ((ch == 'u' || ch == 'U' || ch == 'h' || ch == 'H' || ch == KEY_LEFT) && sel > 0) {
             int idx = order[sel];
             int prev = order[sel - 1];
             int tmp = columns[idx].order;
@@ -443,7 +443,7 @@ static void field_manager(void) {
             order[sel] = prev;
             order[sel - 1] = idx;
             sel--;
-        } else if ((ch == 'd' || ch == 'D') && sel < n - 1) {
+        } else if ((ch == 'd' || ch == 'D' || ch == 'l' || ch == 'L' || ch == KEY_RIGHT) && sel < n - 1) {
             int idx = order[sel];
             int next = order[sel + 1];
             int tmp = columns[idx].order;
