@@ -503,6 +503,7 @@ size_t list_processes(struct process_info *buf, size_t max) {
                     else
                         strncpy(buf[count].start_time, "??:??:??",
                                 sizeof(buf[count].start_time));
+                    buf[count].start_timestamp = (double)start_epoch;
                     buf[count].level = 0;
                     count++;
                 }
@@ -634,6 +635,7 @@ size_t list_processes(struct process_info *buf, size_t max) {
                 else
                     strncpy(buf[count].start_time, "??:??:??",
                             sizeof(buf[count].start_time));
+                buf[count].start_timestamp = (double)start_epoch;
                 buf[count].level = 0;
                 count++;
             }
@@ -735,6 +737,30 @@ int cmp_proc_priority(const void *a, const void *b) {
     if (diff < 0)
         res = -1;
     else if (diff > 0)
+        res = 1;
+    if (sort_descending)
+        res = -res;
+    return res;
+}
+
+int cmp_proc_user(const void *a, const void *b) {
+    const struct process_info *pa = a;
+    const struct process_info *pb = b;
+    int res = strcasecmp(pa->user, pb->user);
+    if (res == 0)
+        res = cmp_proc_pid(a, b);
+    if (sort_descending)
+        res = -res;
+    return res;
+}
+
+int cmp_proc_start(const void *a, const void *b) {
+    const struct process_info *pa = a;
+    const struct process_info *pb = b;
+    int res = 0;
+    if (pa->start_timestamp < pb->start_timestamp)
+        res = -1;
+    else if (pa->start_timestamp > pb->start_timestamp)
         res = 1;
     if (sort_descending)
         res = -res;

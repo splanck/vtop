@@ -7,6 +7,8 @@ enum sort_field {
     SORT_PID,
     SORT_CPU,
     SORT_MEM,
+    SORT_USER,
+    SORT_START,
     SORT_TIME,
     SORT_PRI
 };

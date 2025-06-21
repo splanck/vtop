@@ -80,6 +80,8 @@ struct process_info {
     double cpu_usage;
     /* Total CPU time in seconds */
     double cpu_time;
+    /* Process start time as seconds since the epoch */
+    double start_timestamp;
     /* Process start time as HH:MM:SS */
     char start_time[16];
     /* Nesting level for forest view */
@@ -108,6 +110,8 @@ int cmp_proc_cpu(const void *a, const void *b);
 int cmp_proc_mem(const void *a, const void *b);
 int cmp_proc_time(const void *a, const void *b);
 int cmp_proc_priority(const void *a, const void *b);
+int cmp_proc_user(const void *a, const void *b);
+int cmp_proc_start(const void *a, const void *b);
 
 /* sort order control */
 void set_sort_descending(int desc);

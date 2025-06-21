@@ -27,6 +27,8 @@ The `-s` option selects the sort field. Available values are:
 - `pid` &ndash; sort by process ID
 - `cpu` &ndash; sort by CPU usage
 - `mem` &ndash; sort by memory usage
+- `user` &ndash; sort by username
+- `start` &ndash; sort by start time
 
 The `-b`/`--batch` option runs without the ncurses interface and prints
 plain text updates. Use `-n N` to limit the number of refresh cycles;
@@ -62,6 +64,8 @@ Additional shortcuts:
 - Press `S` to toggle cumulative CPU time.
 - Press `E` to cycle through memory units used for display.
 - Press `F4` or `o` to change the sort direction.
+- Press `U` to sort by user.
+- Press `B` to sort by start time.
 - Press `space` to pause or resume updates.
 - Press `h` to open a small help window with available shortcuts.
 - Press `W` to save the current configuration.
