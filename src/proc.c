@@ -38,6 +38,7 @@ static int sort_descending;
 static int thread_mode;
 static int show_idle = 1;
 static int show_accum_time;
+static int cpu_irix_mode;
 
 void set_sort_descending(int desc) { sort_descending = desc != 0; }
 int get_sort_descending(void) { return sort_descending; }
@@ -50,6 +51,9 @@ int get_show_idle(void) { return show_idle; }
 
 void set_show_accum_time(int on) { show_accum_time = on != 0; }
 int get_show_accum_time(void) { return show_accum_time; }
+
+void set_cpu_irix_mode(int on) { cpu_irix_mode = on != 0; }
+int get_cpu_irix_mode(void) { return cpu_irix_mode; }
 
 void set_name_filter(const char *substr) {
     if (substr && *substr) {
@@ -432,6 +436,11 @@ size_t list_processes(struct process_info *buf, size_t max) {
 
                     unsigned long long delta = (utime - old_utime) + (stime - old_stime);
                     double usage = 100.0 * (double)delta / (double)total_delta;
+                    if (get_cpu_irix_mode()) {
+                        size_t ncpu = get_cpu_core_count();
+                        if (ncpu > 0)
+                            usage *= (double)ncpu;
+                    }
                     if (!show_idle && delta == 0) {
                         fclose(fp);
                         continue;
@@ -564,6 +573,11 @@ size_t list_processes(struct process_info *buf, size_t max) {
 
                 unsigned long long delta = (utime - old_utime) + (stime - old_stime);
                 double usage = 100.0 * (double)delta / (double)total_delta;
+                if (get_cpu_irix_mode()) {
+                    size_t ncpu = get_cpu_core_count();
+                    if (ncpu > 0)
+                        usage *= (double)ncpu;
+                }
                 if (!show_idle && delta == 0) {
                     fclose(fp);
                     continue;

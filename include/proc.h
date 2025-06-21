@@ -132,4 +132,8 @@ int get_show_idle(void);
 void set_show_accum_time(int on);
 int get_show_accum_time(void);
 
+/* irix mode: do not scale CPU% by number of CPUs */
+void set_cpu_irix_mode(int on);
+int get_cpu_irix_mode(void);
+
 #endif /* PROC_H */

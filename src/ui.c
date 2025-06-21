@@ -468,7 +468,7 @@ static void field_manager(void) {
 }
 
 static void show_help(void) {
-    const int h = 31;
+    const int h = 32;
     const int w = 52;
     int startx = COLS > w ? (COLS - w) / 2 : 0;
     if (startx < 0)
@@ -499,14 +499,15 @@ static void show_help(void) {
     mvwprintw(win, 20, 2, "V       Toggle process tree");
     mvwprintw(win, 21, 2, "z       Toggle colors");
     mvwprintw(win, 22, 2, "S       Toggle cumulative time");
-    mvwprintw(win, 23, 2, "E       Cycle memory units");
-    mvwprintw(win, 24, 2, "t       Toggle CPU summary");
-    mvwprintw(win, 25, 2, "m       Toggle memory summary");
-    mvwprintw(win, 26, 2, "f       Field manager");
-    mvwprintw(win, 27, 2, "n       Set entry limit");
-    mvwprintw(win, 28, 2, "W       Save config");
-    mvwprintw(win, 29, 2, "SPACE    Pause/resume");
-    mvwprintw(win, 30, 2, "h       Show this help");
+    mvwprintw(win, 23, 2, "I       Toggle Irix mode");
+    mvwprintw(win, 24, 2, "E       Cycle memory units");
+    mvwprintw(win, 25, 2, "t       Toggle CPU summary");
+    mvwprintw(win, 26, 2, "m       Toggle memory summary");
+    mvwprintw(win, 27, 2, "f       Field manager");
+    mvwprintw(win, 28, 2, "n       Set entry limit");
+    mvwprintw(win, 29, 2, "W       Save config");
+    mvwprintw(win, 30, 2, "SPACE    Pause/resume");
+    mvwprintw(win, 31, 2, "h       Show this help");
     mvwprintw(win, h - 2, 2, "Press any key to return");
     wrefresh(win);
     nodelay(stdscr, FALSE);
@@ -885,6 +886,8 @@ int run_ui(unsigned int delay_ms, enum sort_field sort,
                 attrset(A_NORMAL);
         } else if (ch == 'S') {
             set_show_accum_time(!get_show_accum_time());
+        } else if (ch == 'I') {
+            set_cpu_irix_mode(!get_cpu_irix_mode());
         } else if (ch == 'E') {
             summary_unit = next_mem_unit(summary_unit);
             proc_unit = next_mem_unit(proc_unit);

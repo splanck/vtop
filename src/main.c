@@ -41,6 +41,7 @@ static void usage(const char *prog) {
     printf("  -w, --width COLS  Override screen width in columns\n");
     printf("  -a, --cmdline     Display the full command line by default\n");
     printf("  -i, --hide-idle   Hide processes with zero CPU usage\n");
+    printf("      --irix        Do not scale CPU%% by number of CPUs\n");
     printf("      --accum       Include child CPU time in TIME column\n");
 #ifdef WITH_UI
     printf("      --list-fields  Print column names and exit\n");
@@ -166,6 +167,7 @@ int main(int argc, char *argv[]) {
         {"list-fields", no_argument, NULL, 2},
 #endif
         {"accum", no_argument, NULL, 1},
+        {"irix", no_argument, NULL, 3},
         {"help", no_argument, NULL, 'h'},
         {NULL, 0, NULL, 0}
     };
@@ -190,6 +192,9 @@ int main(int argc, char *argv[]) {
             ui_list_fields();
 #endif
             return 0;
+        case 3:
+            set_cpu_irix_mode(1);
+            break;
         case 's':
             if (strcmp(optarg, "cpu") == 0)
                 sort = SORT_CPU;

@@ -49,6 +49,7 @@ The `--list-fields` option prints all available column names and exits.
 The `-a`/`--cmdline` flag shows the full command line instead of the short
 command name.
 Use `-i`/`--hide-idle` to start with idle processes hidden.
+Use `--irix` to display CPU usage relative to a single CPU.
 
 When running the ncurses interface you can press `F3` or `>` to cycle to
 the next sort field and `<` to go back.
@@ -66,6 +67,7 @@ Additional shortcuts:
 - Press `i` to hide or show processes with zero CPU usage.
 - Press `z` to toggle color output.
 - Press `S` to toggle cumulative CPU time.
+- Press `I` to toggle Irix mode (no CPU scaling).
 - Press `E` to cycle through memory units used for display.
 - Press `F4` or `o` to change the sort direction.
 - Press `U` to sort by user.
