@@ -714,9 +714,10 @@ int run_ui(unsigned int delay_ms, enum sort_field sort,
         int row = 0;
         if (show_cpu_summary) {
             mvprintw(row, 0,
-                     "load %.2f %.2f %.2f  up %.0fs  tasks %d/%d  cpu %5.1f%% us %.1f%% sy %.1f%% ni %.1f%% id %.1f%% wa %.1f%% hi %.1f%% si %.1f%% st %.1f%%  mem %5.1f%%  swap %.0f/%.0f%s %.1f%%  intv %.1fs%s%s",
+                     "load %.2f %.2f %.2f  up %.0fs  tasks %d total, %d running, %d sleeping, %d stopped, %d zombie  cpu %5.1f%% us %.1f%% sy %.1f%% ni %.1f%% id %.1f%% wa %.1f%% hi %.1f%% si %.1f%% st %.1f%%  mem %5.1f%%  swap %.0f/%.0f%s %.1f%%  intv %.1fs%s%s",
                      misc.load1, misc.load5, misc.load15, misc.uptime,
-                     misc.running_tasks, misc.total_tasks, cpu_usage,
+                     misc.total_tasks, misc.running_tasks, misc.sleeping_tasks,
+                     misc.stopped_tasks, misc.zombie_tasks, cpu_usage,
                      cs.user_percent - cs.nice_percent, cs.system_percent - cs.irq_percent - cs.softirq_percent - cs.steal_percent,
                      cs.nice_percent, cs.idle_percent - cs.iowait_percent,
                      cs.iowait_percent, cs.irq_percent, cs.softirq_percent, cs.steal_percent,

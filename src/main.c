@@ -110,9 +110,10 @@ static int run_batch(unsigned int delay_ms, enum sort_field sort,
             swap_usage = 100.0 * (double)ms.swap_used / (double)ms.swap_total;
         double swap_used = scale_kb(ms.swap_used, summary_unit);
         double swap_total = scale_kb(ms.swap_total, summary_unit);
-        printf("load %.2f %.2f %.2f  up %.0fs  tasks %d/%d  cpu %5.1f%% us %.1f%% sy %.1f%% id %.1f%%  mem %5.1f%%  swap %.0f/%.0f%s %.1f%%  intv %.1fs\n",
+        printf("load %.2f %.2f %.2f  up %.0fs  tasks %d total, %d running, %d sleeping, %d stopped, %d zombie  cpu %5.1f%% us %.1f%% sy %.1f%% id %.1f%%  mem %5.1f%%  swap %.0f/%.0f%s %.1f%%  intv %.1fs\n",
                misc.load1, misc.load5, misc.load15, misc.uptime,
-               misc.running_tasks, misc.total_tasks,
+               misc.total_tasks, misc.running_tasks, misc.sleeping_tasks,
+               misc.stopped_tasks, misc.zombie_tasks,
                100.0 - cs.idle_percent, cs.user_percent, cs.system_percent,
                cs.idle_percent, mem_usage, swap_used, swap_total,
                mem_unit_suffix(summary_unit), swap_usage, delay_ms / 1000.0);

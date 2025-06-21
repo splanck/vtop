@@ -668,12 +668,62 @@ int read_misc_stats(struct misc_stats *stats) {
     }
     fclose(fp);
 
+    int sleeping = 0;
+    int stopped = 0;
+    int zombie = 0;
+    DIR *dir = opendir("/proc");
+    if (dir) {
+        struct dirent *ent;
+        while ((ent = readdir(dir)) != NULL) {
+            char *endptr;
+            long pid = strtol(ent->d_name, &endptr, 10);
+            if (*endptr != '\0')
+                continue;
+            char path[64];
+            snprintf(path, sizeof(path), "/proc/%ld/status", pid);
+            FILE *fs = fopen(path, "r");
+            if (!fs)
+                continue;
+            char line[256];
+            while (fgets(line, sizeof(line), fs)) {
+                if (strncmp(line, "State:", 6) == 0) {
+                    char st;
+                    if (sscanf(line + 6, " %c", &st) == 1) {
+                        switch (st) {
+                        case 'R':
+                            break;
+                        case 'S':
+                        case 'D':
+                            sleeping++;
+                            break;
+                        case 'T':
+                        case 't':
+                            stopped++;
+                            break;
+                        case 'Z':
+                            zombie++;
+                            break;
+                        default:
+                            break;
+                        }
+                    }
+                    break;
+                }
+            }
+            fclose(fs);
+        }
+        closedir(dir);
+    }
+
     stats->load1 = l1;
     stats->load5 = l5;
     stats->load15 = l15;
     stats->uptime = up;
     stats->running_tasks = running;
     stats->total_tasks = total;
+    stats->sleeping_tasks = sleeping;
+    stats->stopped_tasks = stopped;
+    stats->zombie_tasks = zombie;
     return 0;
 }
 

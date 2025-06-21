@@ -27,10 +27,11 @@ in the UI header next to the overall CPU usage.
 with simple string matching, allowing the code to remain portable.
 
 ## Miscellaneous Statistics
-`read_misc_stats()` parses `/proc/loadavg` and `/proc/uptime` to obtain
-load averages, total running tasks and system uptime. The function fills
-a `struct misc_stats` with three load values, the uptime in seconds and
-the number of running versus total tasks.
+`read_misc_stats()` parses `/proc/loadavg`, `/proc/uptime` and each
+`/proc/[pid]/status` file to obtain load averages, system uptime and a
+breakdown of task states. The resulting `struct misc_stats` contains the
+three load values, uptime in seconds, running and total task counts as
+well as the number of sleeping, stopped and zombie tasks.
 
 ## Running Processes
 `list_processes()` iterates through numeric directories in `/proc`.
