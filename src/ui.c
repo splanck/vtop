@@ -25,6 +25,8 @@ static int show_threads;
 static int show_idle = 1;
 static int color_enabled = 1;
 static int show_forest;
+static int show_cpu_summary = 1;
+static int show_mem_summary = 1;
 
 #define CP_SORT 1
 #define CP_RUNNING 2
@@ -128,6 +130,10 @@ int ui_load_config(unsigned int *delay_ms, enum sort_field *sort) {
             show_idle = atoi(val);
         } else if (strcmp(key, "show_forest") == 0) {
             show_forest = atoi(val);
+        } else if (strcmp(key, "show_cpu_summary") == 0) {
+            show_cpu_summary = atoi(val);
+        } else if (strcmp(key, "show_mem_summary") == 0) {
+            show_mem_summary = atoi(val);
         } else if (strcmp(key, "color_enabled") == 0) {
             color_enabled = atoi(val);
         } else if (strcmp(key, "columns") == 0) {
@@ -163,6 +169,8 @@ int ui_save_config(unsigned int delay_ms, enum sort_field sort) {
     fprintf(fp, "show_threads=%d\n", show_threads);
     fprintf(fp, "show_idle=%d\n", show_idle);
     fprintf(fp, "show_forest=%d\n", show_forest);
+    fprintf(fp, "show_cpu_summary=%d\n", show_cpu_summary);
+    fprintf(fp, "show_mem_summary=%d\n", show_mem_summary);
     fprintf(fp, "color_enabled=%d\n", color_enabled);
     fprintf(fp, "columns=");
     for (int i = 0; i < COL_COUNT; i++) {
@@ -344,7 +352,7 @@ static void field_manager(void) {
 }
 
 static void show_help(void) {
-    const int h = 26;
+    const int h = 28;
     const int w = 52;
     int startx = COLS > w ? (COLS - w) / 2 : 0;
     if (startx < 0)
@@ -372,11 +380,13 @@ static void show_help(void) {
     mvwprintw(win, 17, 2, "i       Toggle idle processes");
     mvwprintw(win, 18, 2, "V       Toggle process tree");
     mvwprintw(win, 19, 2, "z       Toggle colors");
-    mvwprintw(win, 20, 2, "f       Field manager");
-    mvwprintw(win, 21, 2, "n       Set entry limit");
-    mvwprintw(win, 22, 2, "W       Save config");
-    mvwprintw(win, 23, 2, "SPACE    Pause/resume");
-    mvwprintw(win, 24, 2, "h       Show this help");
+    mvwprintw(win, 20, 2, "t       Toggle CPU summary");
+    mvwprintw(win, 21, 2, "m       Toggle memory summary");
+    mvwprintw(win, 22, 2, "f       Field manager");
+    mvwprintw(win, 23, 2, "n       Set entry limit");
+    mvwprintw(win, 24, 2, "W       Save config");
+    mvwprintw(win, 25, 2, "SPACE    Pause/resume");
+    mvwprintw(win, 26, 2, "h       Show this help");
     mvwprintw(win, h - 2, 2, "Press any key to return");
     wrefresh(win);
     nodelay(stdscr, FALSE);
@@ -582,27 +592,33 @@ int run_ui(unsigned int delay_ms, enum sort_field sort,
         double swap_u = scale_kb(ms.swap_used, summary_unit);
         double swap_t = scale_kb(ms.swap_total, summary_unit);
         const char *unit = mem_unit_suffix(summary_unit);
-        mvprintw(0, 0,
-                 "load %.2f %.2f %.2f  up %.0fs  tasks %d/%d  cpu %5.1f%% us %.1f%% sy %.1f%% ni %.1f%% id %.1f%% wa %.1f%% hi %.1f%% si %.1f%% st %.1f%%  mem %5.1f%%  swap %.0f/%.0f%s %.1f%%  intv %.1fs%s%s",
-                 misc.load1, misc.load5, misc.load15, misc.uptime,
-                 misc.running_tasks, misc.total_tasks, cpu_usage,
-                 cs.user_percent - cs.nice_percent, cs.system_percent - cs.irq_percent - cs.softirq_percent - cs.steal_percent,
-                 cs.nice_percent, cs.idle_percent - cs.iowait_percent,
-                 cs.iowait_percent, cs.irq_percent, cs.softirq_percent, cs.steal_percent,
-                 mem_usage, swap_u, swap_t, unit, swap_usage,
-                 interval / 1000.0, paused ? " [PAUSED]" : "", fbuf);
+        int row = 0;
+        if (show_cpu_summary) {
+            mvprintw(row, 0,
+                     "load %.2f %.2f %.2f  up %.0fs  tasks %d/%d  cpu %5.1f%% us %.1f%% sy %.1f%% ni %.1f%% id %.1f%% wa %.1f%% hi %.1f%% si %.1f%% st %.1f%%  mem %5.1f%%  swap %.0f/%.0f%s %.1f%%  intv %.1fs%s%s",
+                     misc.load1, misc.load5, misc.load15, misc.uptime,
+                     misc.running_tasks, misc.total_tasks, cpu_usage,
+                     cs.user_percent - cs.nice_percent, cs.system_percent - cs.irq_percent - cs.softirq_percent - cs.steal_percent,
+                     cs.nice_percent, cs.idle_percent - cs.iowait_percent,
+                     cs.iowait_percent, cs.irq_percent, cs.softirq_percent, cs.steal_percent,
+                     mem_usage, swap_u, swap_t, unit, swap_usage,
+                     interval / 1000.0, paused ? " [PAUSED]" : "", fbuf);
+            row++;
+        }
 
-        double total = scale_kb(ms.total, summary_unit);
-        double used = scale_kb(ms.total - ms.free, summary_unit);
-        double free = scale_kb(ms.free, summary_unit);
-        double bufs = scale_kb(ms.buffers, summary_unit);
-        double cached = scale_kb(ms.cached, summary_unit);
-        mvprintw(1, 0,
-                 "mem total %.0f%s used %.0f%s free %.0f%s buf %.0f%s cache %.0f%s swap %.0f/%.0f%s",
-                 total, unit, used, unit, free, unit, bufs, unit, cached, unit,
-                 swap_u, swap_t, unit);
+        if (show_mem_summary) {
+            double total = scale_kb(ms.total, summary_unit);
+            double used = scale_kb(ms.total - ms.free, summary_unit);
+            double free = scale_kb(ms.free, summary_unit);
+            double bufs = scale_kb(ms.buffers, summary_unit);
+            double cached = scale_kb(ms.cached, summary_unit);
+            mvprintw(row, 0,
+                     "mem total %.0f%s used %.0f%s free %.0f%s buf %.0f%s cache %.0f%s swap %.0f/%.0f%s",
+                     total, unit, used, unit, free, unit, bufs, unit, cached, unit,
+                     swap_u, swap_t, unit);
+            row++;
+        }
 
-        int row = 2;
         if (show_cores && core_count > 0) {
             char cbuf[256] = "";
             for (size_t i = 0; i < core_count; i++) {
@@ -734,6 +750,10 @@ int run_ui(unsigned int delay_ms, enum sort_field sort,
             color_enabled = !color_enabled;
             if (!color_enabled)
                 attrset(A_NORMAL);
+        } else if (ch == 't') {
+            show_cpu_summary = !show_cpu_summary;
+        } else if (ch == 'm') {
+            show_mem_summary = !show_mem_summary;
         } else if (ch == 'n') {
             char buf[16];
             nodelay(stdscr, FALSE);
