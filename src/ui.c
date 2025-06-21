@@ -24,7 +24,19 @@ static int show_cores;
 static int show_full_cmd;
 static int show_threads;
 static int show_idle = 1;
-static int color_enabled = 1;
+struct color_scheme {
+    short sort;
+    short running;
+};
+
+static const struct color_scheme color_schemes[] = {
+    { -1, -1 },               /* 0: monochrome */
+    { COLOR_YELLOW, COLOR_GREEN },
+    { COLOR_CYAN,   COLOR_MAGENTA }
+};
+
+#define COLOR_SCHEME_COUNT (sizeof(color_schemes)/sizeof(color_schemes[0]))
+static int color_scheme = 1;
 static int show_forest;
 static int show_cpu_summary = 1;
 static int show_mem_summary = 1;
@@ -113,6 +125,14 @@ void ui_set_show_full_cmd(int on) { show_full_cmd = on != 0; }
 
 void ui_set_show_idle(int on) { show_idle = on != 0; }
 
+static void apply_color_scheme(void) {
+    if (!has_colors())
+        return;
+    const struct color_scheme *cs = &color_schemes[color_scheme];
+    init_pair(CP_SORT, cs->sort, -1);
+    init_pair(CP_RUNNING, cs->running, -1);
+}
+
 int ui_load_config(unsigned int *delay_ms, enum sort_field *sort) {
     const char *path = get_config_path();
     FILE *fp = fopen(path, "r");
@@ -170,8 +190,10 @@ int ui_load_config(unsigned int *delay_ms, enum sort_field *sort) {
             summary_unit = parse_mem_unit(val);
         } else if (strcmp(key, "proc_unit") == 0) {
             proc_unit = parse_mem_unit(val);
-        } else if (strcmp(key, "color_enabled") == 0) {
-            color_enabled = atoi(val);
+        } else if (strcmp(key, "color_scheme") == 0) {
+            color_scheme = atoi(val);
+            if (color_scheme < 0 || color_scheme >= COLOR_SCHEME_COUNT)
+                color_scheme = 1;
         } else if (strcmp(key, "columns") == 0) {
             char *tok = strtok(val, ",");
             for (int i = 0; i < COL_COUNT && tok; i++) {
@@ -235,7 +257,7 @@ int ui_save_config(unsigned int delay_ms, enum sort_field sort) {
     fprintf(fp, "show_mem_summary=%d\n", show_mem_summary);
     fprintf(fp, "summary_unit=%s\n", mem_unit_suffix(summary_unit));
     fprintf(fp, "proc_unit=%s\n", mem_unit_suffix(proc_unit));
-    fprintf(fp, "color_enabled=%d\n", color_enabled);
+    fprintf(fp, "color_scheme=%d\n", color_scheme);
     fprintf(fp, "columns=");
     for (int i = 0; i < COL_COUNT; i++) {
         fprintf(fp, "%d", columns[i].enabled);
@@ -307,10 +329,10 @@ static void draw_header(int row) {
         int i = order[p];
         if (!column_visible(i))
             continue;
-        if (color_enabled && columns[i].id == sort_col)
+        if (color_scheme && columns[i].id == sort_col)
             attron(COLOR_PAIR(CP_SORT));
         mvprintw(row, x, "%-*s", columns[i].width, columns[i].title);
-        if (color_enabled && columns[i].id == sort_col)
+        if (color_scheme && columns[i].id == sort_col)
             attroff(COLOR_PAIR(CP_SORT));
         x += columns[i].width + 1;
     }
@@ -319,7 +341,7 @@ static void draw_header(int row) {
 static void draw_process_row(int row, const struct process_info *p) {
     int x = 0;
     enum column_id sort_col = get_sort_column();
-    if (color_enabled && p->state == 'R')
+    if (color_scheme && p->state == 'R')
         attron(COLOR_PAIR(CP_RUNNING));
     int order[COL_COUNT];
     build_ordered_indices(order);
@@ -327,7 +349,7 @@ static void draw_process_row(int row, const struct process_info *p) {
         int i = order[pidx];
         if (!column_visible(i))
             continue;
-        if (color_enabled && columns[i].id == sort_col)
+        if (color_scheme && columns[i].id == sort_col)
             attron(COLOR_PAIR(CP_SORT));
         switch (columns[i].id) {
         case COL_PID:
@@ -401,11 +423,11 @@ static void draw_process_row(int row, const struct process_info *p) {
         default:
             break;
         }
-        if (color_enabled && columns[i].id == sort_col)
+        if (color_scheme && columns[i].id == sort_col)
             attroff(COLOR_PAIR(CP_SORT));
         x += columns[i].width + 1;
     }
-    if (color_enabled && p->state == 'R')
+    if (color_scheme && p->state == 'R')
         attroff(COLOR_PAIR(CP_RUNNING));
 }
 
@@ -497,7 +519,7 @@ static void show_help(void) {
     mvwprintw(win, 18, 2, "H       Toggle thread view");
     mvwprintw(win, 19, 2, "i       Toggle idle processes");
     mvwprintw(win, 20, 2, "V       Toggle process tree");
-    mvwprintw(win, 21, 2, "z       Toggle colors");
+    mvwprintw(win, 21, 2, "Z       Cycle color scheme");
     mvwprintw(win, 22, 2, "S       Toggle cumulative time");
     mvwprintw(win, 23, 2, "I       Toggle Irix mode");
     mvwprintw(win, 24, 2, "E       Cycle memory units");
@@ -607,8 +629,7 @@ int run_ui(unsigned int delay_ms, enum sort_field sort,
     if (has_colors()) {
         start_color();
         use_default_colors();
-        init_pair(CP_SORT, COLOR_YELLOW, -1);
-        init_pair(CP_RUNNING, COLOR_GREEN, -1);
+        apply_color_scheme();
     }
 
     struct process_info *procs = NULL;
@@ -880,9 +901,10 @@ int run_ui(unsigned int delay_ms, enum sort_field sort,
             set_show_idle(show_idle);
         } else if (ch == 'V') {
             show_forest = !show_forest;
-        } else if (ch == 'z') {
-            color_enabled = !color_enabled;
-            if (!color_enabled)
+        } else if (ch == 'Z') {
+            color_scheme = (color_scheme + 1) % COLOR_SCHEME_COUNT;
+            apply_color_scheme();
+            if (!color_scheme)
                 attrset(A_NORMAL);
         } else if (ch == 'S') {
             set_show_accum_time(!get_show_accum_time());
