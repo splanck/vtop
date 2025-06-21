@@ -74,6 +74,8 @@ struct process_info {
     long nice;
     unsigned long long vsize;
     long rss;
+    /* Shared memory size in KB */
+    unsigned long long shared;
     /* RSS as a percentage of total system memory */
     double rss_percent;
     /* User and system CPU times in clock ticks */

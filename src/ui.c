@@ -59,6 +59,7 @@ enum column_id {
     COL_NICE,
     COL_VSIZE,
     COL_RSS,
+    COL_SHR,
     COL_RSSP,
     COL_CPU,
     COL_CPUP,
@@ -88,11 +89,12 @@ static struct column_def columns[COL_COUNT] = {
     {COL_NICE,  "NICE",    5, 0, 1, 6},
     {COL_VSIZE, "VSIZE",   8, 0, 1, 7},
     {COL_RSS,   "RSS",     5, 0, 1, 8},
-    {COL_RSSP,  "RSS%",    6, 0, 1, 9},
-    {COL_CPU,   "CPU",     3, 0, 1,10},
-    {COL_CPUP,  "CPU%",    6, 0, 1,11},
-    {COL_TIME,  "TIME",    8, 0, 1,12},
-    {COL_START, "START",   8, 1, 1,13}
+    {COL_SHR,   "SHR",     5, 0, 1, 9},
+    {COL_RSSP,  "RSS%",    6, 0, 1,10},
+    {COL_CPU,   "CPU",     3, 0, 1,11},
+    {COL_CPUP,  "CPU%",    6, 0, 1,12},
+    {COL_TIME,  "TIME",    8, 0, 1,13},
+    {COL_START, "START",   8, 1, 1,14}
 };
 
 void ui_list_fields(void) {
@@ -412,6 +414,12 @@ static void draw_process_row(int row, const struct process_info *p) {
                      columns[i].width, rss);
             break;
         }
+        case COL_SHR: {
+            double shr = scale_kb(p->shared, proc_unit);
+            mvprintw(row, x, columns[i].left ? "%-*.1f" : "%*.1f",
+                     columns[i].width, shr);
+            break;
+        }
         case COL_RSSP:
             mvprintw(row, x, columns[i].left ? "%-*.2f" : "%*.2f",
                      columns[i].width, p->rss_percent);
@@ -543,7 +551,7 @@ static void show_help(void) {
     mvwprintw(win, 28, 2, "E       Cycle memory units");
     mvwprintw(win, 29, 2, "t       Toggle CPU summary");
     mvwprintw(win, 30, 2, "m       Toggle memory summary");
-    mvwprintw(win, 31, 2, "f       Field manager");
+    mvwprintw(win, 31, 2, "f       Field manager (toggle columns)");
     mvwprintw(win, 32, 2, "n       Set entry limit");
     mvwprintw(win, 33, 2, "W       Save config");
     mvwprintw(win, 34, 2, "SPACE    Pause/resume");
