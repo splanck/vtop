@@ -8,6 +8,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <signal.h>
+#include <ctype.h>
 
 #define MIN_DELAY_MS 100
 #define MAX_DELAY_MS 10000
@@ -85,6 +86,21 @@ static const char *get_config_path(void) {
     return path;
 }
 
+static enum mem_unit parse_mem_unit(const char *arg) {
+    if (!arg || !*arg)
+        return MEM_UNIT_K;
+    char c = tolower((unsigned char)arg[0]);
+    switch (c) {
+    case 'm': return MEM_UNIT_M;
+    case 'g': return MEM_UNIT_G;
+    case 't': return MEM_UNIT_T;
+    case 'p': return MEM_UNIT_P;
+    case 'e': return MEM_UNIT_E;
+    case 'k':
+    default:  return MEM_UNIT_K;
+    }
+}
+
 int ui_load_config(unsigned int *delay_ms, enum sort_field *sort) {
     const char *path = get_config_path();
     FILE *fp = fopen(path, "r");
@@ -134,6 +150,10 @@ int ui_load_config(unsigned int *delay_ms, enum sort_field *sort) {
             show_cpu_summary = atoi(val);
         } else if (strcmp(key, "show_mem_summary") == 0) {
             show_mem_summary = atoi(val);
+        } else if (strcmp(key, "summary_unit") == 0) {
+            summary_unit = parse_mem_unit(val);
+        } else if (strcmp(key, "proc_unit") == 0) {
+            proc_unit = parse_mem_unit(val);
         } else if (strcmp(key, "color_enabled") == 0) {
             color_enabled = atoi(val);
         } else if (strcmp(key, "columns") == 0) {
@@ -171,6 +191,8 @@ int ui_save_config(unsigned int delay_ms, enum sort_field sort) {
     fprintf(fp, "show_forest=%d\n", show_forest);
     fprintf(fp, "show_cpu_summary=%d\n", show_cpu_summary);
     fprintf(fp, "show_mem_summary=%d\n", show_mem_summary);
+    fprintf(fp, "summary_unit=%s\n", mem_unit_suffix(summary_unit));
+    fprintf(fp, "proc_unit=%s\n", mem_unit_suffix(proc_unit));
     fprintf(fp, "color_enabled=%d\n", color_enabled);
     fprintf(fp, "columns=");
     for (int i = 0; i < COL_COUNT; i++) {
@@ -380,13 +402,14 @@ static void show_help(void) {
     mvwprintw(win, 17, 2, "i       Toggle idle processes");
     mvwprintw(win, 18, 2, "V       Toggle process tree");
     mvwprintw(win, 19, 2, "z       Toggle colors");
-    mvwprintw(win, 20, 2, "t       Toggle CPU summary");
-    mvwprintw(win, 21, 2, "m       Toggle memory summary");
-    mvwprintw(win, 22, 2, "f       Field manager");
-    mvwprintw(win, 23, 2, "n       Set entry limit");
-    mvwprintw(win, 24, 2, "W       Save config");
-    mvwprintw(win, 25, 2, "SPACE    Pause/resume");
-    mvwprintw(win, 26, 2, "h       Show this help");
+    mvwprintw(win, 20, 2, "E       Cycle memory units");
+    mvwprintw(win, 21, 2, "t       Toggle CPU summary");
+    mvwprintw(win, 22, 2, "m       Toggle memory summary");
+    mvwprintw(win, 23, 2, "f       Field manager");
+    mvwprintw(win, 24, 2, "n       Set entry limit");
+    mvwprintw(win, 25, 2, "W       Save config");
+    mvwprintw(win, 26, 2, "SPACE    Pause/resume");
+    mvwprintw(win, 27, 2, "h       Show this help");
     mvwprintw(win, h - 2, 2, "Press any key to return");
     wrefresh(win);
     nodelay(stdscr, FALSE);
@@ -750,6 +773,9 @@ int run_ui(unsigned int delay_ms, enum sort_field sort,
             color_enabled = !color_enabled;
             if (!color_enabled)
                 attrset(A_NORMAL);
+        } else if (ch == 'E') {
+            summary_unit = next_mem_unit(summary_unit);
+            proc_unit = next_mem_unit(proc_unit);
         } else if (ch == 't') {
             show_cpu_summary = !show_cpu_summary;
         } else if (ch == 'm') {

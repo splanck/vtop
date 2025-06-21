@@ -55,6 +55,7 @@ Additional shortcuts:
 - Press `H` to toggle thread view (show individual threads).
 - Press `i` to hide or show processes with zero CPU usage.
 - Press `z` to toggle color output.
+- Press `E` to cycle through memory units used for display.
 - Press `F4` or `o` to change the sort direction.
 - Press `space` to pause or resume updates.
 - Press `h` to open a small help window with available shortcuts.
@@ -68,7 +69,8 @@ critical system tasks, so use with care.
 
 When the ncurses interface exits it writes the current options to
 `~/.vtoprc`. This file stores the refresh interval, sort column and the
-enabled columns. On the next launch, vtop reads this file to restore the
+enabled columns as well as the chosen memory units. On the next launch,
+vtop reads this file to restore the
 previous settings. You can also press `W` at any time to save the
 configuration manually.
 

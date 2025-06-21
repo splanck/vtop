@@ -28,6 +28,7 @@ extern enum mem_unit proc_unit;
 
 double scale_kb(unsigned long long kb, enum mem_unit unit);
 const char *mem_unit_suffix(enum mem_unit unit);
+enum mem_unit next_mem_unit(enum mem_unit unit);
 
 #ifdef WITH_UI
 /* Load configuration from ~/.vtoprc if available. The delay and sort
