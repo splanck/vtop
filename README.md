@@ -66,6 +66,7 @@ Additional shortcuts:
 - Press `H` to toggle thread view (show individual threads).
 - Press `i` to hide or show processes with zero CPU usage.
 - Press `Z` to cycle through color schemes.
+- Press `x` to toggle highlighting of the sorted column.
 - Press `S` to toggle cumulative CPU time.
 - Press `I` to toggle Irix mode (no CPU scaling).
 - Press `E` to cycle through memory units used for display.

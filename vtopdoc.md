@@ -104,6 +104,7 @@ Process management shortcuts are also available:
 - `S` &ndash; toggle cumulative CPU time display.
 - `I` &ndash; toggle Irix mode (CPU usage of each task not divided by CPU count).
 - `F4`/`o` &ndash; change the sort direction.
+- `x` &ndash; toggle highlighting of the sorted column.
 - `U` &ndash; sort by user.
 - `B` &ndash; sort by start time.
 - `h` &ndash; display a help window showing available shortcuts.

@@ -40,6 +40,7 @@ static int color_scheme = 1;
 static int show_forest;
 static int show_cpu_summary = 1;
 static int show_mem_summary = 1;
+static int highlight_sort = 1;
 
 #define CP_SORT 1
 #define CP_RUNNING 2
@@ -329,10 +330,10 @@ static void draw_header(int row) {
         int i = order[p];
         if (!column_visible(i))
             continue;
-        if (color_scheme && columns[i].id == sort_col)
+        if (highlight_sort && color_scheme && columns[i].id == sort_col)
             attron(COLOR_PAIR(CP_SORT));
         mvprintw(row, x, "%-*s", columns[i].width, columns[i].title);
-        if (color_scheme && columns[i].id == sort_col)
+        if (highlight_sort && color_scheme && columns[i].id == sort_col)
             attroff(COLOR_PAIR(CP_SORT));
         x += columns[i].width + 1;
     }
@@ -349,7 +350,7 @@ static void draw_process_row(int row, const struct process_info *p) {
         int i = order[pidx];
         if (!column_visible(i))
             continue;
-        if (color_scheme && columns[i].id == sort_col)
+        if (highlight_sort && color_scheme && columns[i].id == sort_col)
             attron(COLOR_PAIR(CP_SORT));
         switch (columns[i].id) {
         case COL_PID:
@@ -423,7 +424,7 @@ static void draw_process_row(int row, const struct process_info *p) {
         default:
             break;
         }
-        if (color_scheme && columns[i].id == sort_col)
+        if (highlight_sort && color_scheme && columns[i].id == sort_col)
             attroff(COLOR_PAIR(CP_SORT));
         x += columns[i].width + 1;
     }
@@ -490,7 +491,7 @@ static void field_manager(void) {
 }
 
 static void show_help(void) {
-    const int h = 32;
+    const int h = 33;
     const int w = 52;
     int startx = COLS > w ? (COLS - w) / 2 : 0;
     if (startx < 0)
@@ -520,16 +521,17 @@ static void show_help(void) {
     mvwprintw(win, 19, 2, "i       Toggle idle processes");
     mvwprintw(win, 20, 2, "V       Toggle process tree");
     mvwprintw(win, 21, 2, "Z       Cycle color scheme");
-    mvwprintw(win, 22, 2, "S       Toggle cumulative time");
-    mvwprintw(win, 23, 2, "I       Toggle Irix mode");
-    mvwprintw(win, 24, 2, "E       Cycle memory units");
-    mvwprintw(win, 25, 2, "t       Toggle CPU summary");
-    mvwprintw(win, 26, 2, "m       Toggle memory summary");
-    mvwprintw(win, 27, 2, "f       Field manager");
-    mvwprintw(win, 28, 2, "n       Set entry limit");
-    mvwprintw(win, 29, 2, "W       Save config");
-    mvwprintw(win, 30, 2, "SPACE    Pause/resume");
-    mvwprintw(win, 31, 2, "h       Show this help");
+    mvwprintw(win, 22, 2, "x       Toggle sort highlight");
+    mvwprintw(win, 23, 2, "S       Toggle cumulative time");
+    mvwprintw(win, 24, 2, "I       Toggle Irix mode");
+    mvwprintw(win, 25, 2, "E       Cycle memory units");
+    mvwprintw(win, 26, 2, "t       Toggle CPU summary");
+    mvwprintw(win, 27, 2, "m       Toggle memory summary");
+    mvwprintw(win, 28, 2, "f       Field manager");
+    mvwprintw(win, 29, 2, "n       Set entry limit");
+    mvwprintw(win, 30, 2, "W       Save config");
+    mvwprintw(win, 31, 2, "SPACE    Pause/resume");
+    mvwprintw(win, 32, 2, "h       Show this help");
     mvwprintw(win, h - 2, 2, "Press any key to return");
     wrefresh(win);
     nodelay(stdscr, FALSE);
@@ -906,6 +908,8 @@ int run_ui(unsigned int delay_ms, enum sort_field sort,
             apply_color_scheme();
             if (!color_scheme)
                 attrset(A_NORMAL);
+        } else if (ch == 'x') {
+            highlight_sort = !highlight_sort;
         } else if (ch == 'S') {
             set_show_accum_time(!get_show_accum_time());
         } else if (ch == 'I') {
