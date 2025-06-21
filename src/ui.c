@@ -58,22 +58,25 @@ struct column_def {
     int width;
     int left;
     int enabled;
+    int order;
 };
 
+static void build_ordered_indices(int out[COL_COUNT]);
+
 static struct column_def columns[COL_COUNT] = {
-    {COL_PID,   "PID",     8, 1, 1},
-    {COL_TID,   "TID",     8, 1, 0},
-    {COL_USER,  "USER",    8, 1, 1},
-    {COL_CMD,   "NAME",   25, 1, 1},
-    {COL_STATE, "STATE",   5, 1, 1},
-    {COL_PRI,   "PRI",     4, 0, 1},
-    {COL_NICE,  "NICE",    5, 0, 1},
-    {COL_VSIZE, "VSIZE",   8, 0, 1},
-    {COL_RSS,   "RSS",     5, 0, 1},
-    {COL_RSSP,  "RSS%",    6, 0, 1},
-    {COL_CPUP,  "CPU%",    6, 0, 1},
-    {COL_TIME,  "TIME",    8, 0, 1},
-    {COL_START, "START",   8, 1, 1}
+    {COL_PID,   "PID",     8, 1, 1, 0},
+    {COL_TID,   "TID",     8, 1, 0, 1},
+    {COL_USER,  "USER",    8, 1, 1, 2},
+    {COL_CMD,   "NAME",   25, 1, 1, 3},
+    {COL_STATE, "STATE",   5, 1, 1, 4},
+    {COL_PRI,   "PRI",     4, 0, 1, 5},
+    {COL_NICE,  "NICE",    5, 0, 1, 6},
+    {COL_VSIZE, "VSIZE",   8, 0, 1, 7},
+    {COL_RSS,   "RSS",     5, 0, 1, 8},
+    {COL_RSSP,  "RSS%",    6, 0, 1, 9},
+    {COL_CPUP,  "CPU%",    6, 0, 1,10},
+    {COL_TIME,  "TIME",    8, 0, 1,11},
+    {COL_START, "START",   8, 1, 1,12}
 };
 
 /* configuration file helpers */
@@ -162,6 +165,28 @@ int ui_load_config(unsigned int *delay_ms, enum sort_field *sort) {
                 columns[i].enabled = atoi(tok);
                 tok = strtok(NULL, ",");
             }
+        } else if (strcmp(key, "column_order") == 0) {
+            int used[COL_COUNT] = {0};
+            char *tok = strtok(val, ",");
+            int pos = 0;
+            while (tok && pos < COL_COUNT) {
+                int id = atoi(tok);
+                if (id >= 0 && id < COL_COUNT && !used[id]) {
+                    for (int i = 0; i < COL_COUNT; i++) {
+                        if (columns[i].id == id) {
+                            columns[i].order = pos;
+                            used[id] = 1;
+                            pos++;
+                            break;
+                        }
+                    }
+                }
+                tok = strtok(NULL, ",");
+            }
+            for (int i = 0; i < COL_COUNT; i++) {
+                if (!used[columns[i].id])
+                    columns[i].order = pos++;
+            }
         }
     }
     fclose(fp);
@@ -201,6 +226,15 @@ int ui_save_config(unsigned int delay_ms, enum sort_field sort) {
             fputc(',', fp);
     }
     fputc('\n', fp);
+    fprintf(fp, "column_order=");
+    int order[COL_COUNT];
+    build_ordered_indices(order);
+    for (int i = 0; i < COL_COUNT; i++) {
+        fprintf(fp, "%d", columns[order[i]].id);
+        if (i < COL_COUNT - 1)
+            fputc(',', fp);
+    }
+    fputc('\n', fp);
     fclose(fp);
     return 0;
 }
@@ -209,6 +243,17 @@ static int column_visible(int idx) {
     if (columns[idx].id == COL_TID && !show_threads)
         return 0;
     return columns[idx].enabled;
+}
+
+static void build_ordered_indices(int out[COL_COUNT]) {
+    for (int pos = 0; pos < COL_COUNT; pos++) {
+        for (int i = 0; i < COL_COUNT; i++) {
+            if (columns[i].order == pos) {
+                out[pos] = i;
+                break;
+            }
+        }
+    }
 }
 
 static void update_column_titles(void) {
@@ -235,7 +280,10 @@ static void draw_header(int row) {
     update_column_titles();
     int x = 0;
     enum column_id sort_col = get_sort_column();
-    for (int i = 0; i < COL_COUNT; i++) {
+    int order[COL_COUNT];
+    build_ordered_indices(order);
+    for (int p = 0; p < COL_COUNT; p++) {
+        int i = order[p];
         if (!column_visible(i))
             continue;
         if (color_enabled && columns[i].id == sort_col)
@@ -252,7 +300,10 @@ static void draw_process_row(int row, const struct process_info *p) {
     enum column_id sort_col = get_sort_column();
     if (color_enabled && p->state == 'R')
         attron(COLOR_PAIR(CP_RUNNING));
-    for (int i = 0; i < COL_COUNT; i++) {
+    int order[COL_COUNT];
+    build_ordered_indices(order);
+    for (int pidx = 0; pidx < COL_COUNT; pidx++) {
+        int i = order[pidx];
         if (!column_visible(i))
             continue;
         if (color_enabled && columns[i].id == sort_col)
@@ -339,6 +390,8 @@ static void draw_process_row(int row, const struct process_info *p) {
 
 static void field_manager(void) {
     const int n = COL_COUNT;
+    int order[COL_COUNT];
+    build_ordered_indices(order);
     int sel = 0;
     int h = n + 4;
     int w = 20;
@@ -354,10 +407,11 @@ static void field_manager(void) {
     int ch = 0;
     while (ch != '\n' && ch != 'q' && ch != 27) {
         box(win, 0, 0);
-        mvwprintw(win, 1, 2, "Toggle fields:");
+        mvwprintw(win, 1, 2, "Toggle fields (u/d move):");
         for (int i = 0; i < n; i++) {
-            mvwprintw(win, i + 2, 2, "[%c] %s", columns[i].enabled ? 'x' : ' ',
-                     columns[i].title);
+            int idx = order[i];
+            mvwprintw(win, i + 2, 2, "[%c] %s", columns[idx].enabled ? 'x' : ' ',
+                     columns[idx].title);
         }
         wmove(win, sel + 2, 1);
         wrefresh(win);
@@ -367,7 +421,26 @@ static void field_manager(void) {
         else if (ch == KEY_DOWN && sel < n - 1)
             sel++;
         else if (ch == ' ')
-            columns[sel].enabled = !columns[sel].enabled;
+            columns[order[sel]].enabled = !columns[order[sel]].enabled;
+        else if ((ch == 'u' || ch == 'U') && sel > 0) {
+            int idx = order[sel];
+            int prev = order[sel - 1];
+            int tmp = columns[idx].order;
+            columns[idx].order = columns[prev].order;
+            columns[prev].order = tmp;
+            order[sel] = prev;
+            order[sel - 1] = idx;
+            sel--;
+        } else if ((ch == 'd' || ch == 'D') && sel < n - 1) {
+            int idx = order[sel];
+            int next = order[sel + 1];
+            int tmp = columns[idx].order;
+            columns[idx].order = columns[next].order;
+            columns[next].order = tmp;
+            order[sel] = next;
+            order[sel + 1] = idx;
+            sel++;
+        }
     }
     delwin(win);
     nodelay(stdscr, TRUE);
