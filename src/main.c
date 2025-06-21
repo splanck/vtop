@@ -50,6 +50,7 @@ static void usage(const char *prog) {
 #ifdef WITH_UI
     printf("      --list-fields  Print column names and exit\n");
 #endif
+    printf("  -V, --version     Print vtop version and exit\n");
 }
 
 static int run_batch(unsigned int delay_ms, enum sort_field sort,
@@ -176,6 +177,7 @@ int main(int argc, char *argv[]) {
         {"per-cpu", no_argument, NULL, '1'},
         {"accum", no_argument, NULL, 1},
         {"irix", no_argument, NULL, 3},
+        {"version", no_argument, NULL, 'V'},
         {"help", no_argument, NULL, 'h'},
         {NULL, 0, NULL, 0}
     };
@@ -184,7 +186,7 @@ int main(int argc, char *argv[]) {
     int batch = 0;
     unsigned int iterations = 0;
     int columns = 0;
-    while ((opt = getopt_long(argc, argv, "d:Ss:E:e:b:n:m:p:u:U:w:aiHh", long_opts, &idx)) != -1) {
+    while ((opt = getopt_long(argc, argv, "d:Ss:E:e:b:n:m:p:u:U:w:aiHVh", long_opts, &idx)) != -1) {
         switch (opt) {
         case 'd':
             delay_ms = (unsigned int)(strtod(optarg, NULL) * 1000);
@@ -266,6 +268,9 @@ int main(int argc, char *argv[]) {
         case 'H':
             set_thread_mode(1);
             break;
+        case 'V':
+            printf("vtop version %s\n", VTOP_VERSION);
+            return 0;
         case 'h':
         default:
             usage(argv[0]);
