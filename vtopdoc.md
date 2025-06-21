@@ -112,6 +112,7 @@ Process management shortcuts are also available:
 - `x` &ndash; toggle highlighting of the sorted column.
 - `U` &ndash; sort by user.
 - `B` &ndash; sort by start time.
+- `M` &ndash; sort by memory usage.
 - `h` &ndash; display a help window showing available shortcuts.
 - `f` &ndash; open the field manager to hide columns or reorder them
   with `h`/`l`.
