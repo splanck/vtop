@@ -125,3 +125,7 @@ PID      NAME                     STATE  VSIZE    RSS   SHR  RSS%  CPU%   TIME  
 ...
 ```
 
+
+## License
+
+This project is licensed under the BSD 2-Clause "Simplified" License. See the [LICENSE](LICENSE) file for details.
