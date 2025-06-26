@@ -168,6 +168,8 @@ int ui_load_config(unsigned int *delay_ms, enum sort_field *sort) {
                     *sort = SORT_CPU;
                 else if (strcmp(val, "mem") == 0)
                     *sort = SORT_MEM;
+                else if (strcmp(val, "vsize") == 0)
+                    *sort = SORT_VSIZE;
                 else if (strcmp(val, "user") == 0)
                     *sort = SORT_USER;
                 else if (strcmp(val, "start") == 0)
@@ -247,6 +249,8 @@ int ui_save_config(unsigned int delay_ms, enum sort_field sort) {
         s = "cpu";
     else if (sort == SORT_MEM)
         s = "mem";
+    else if (sort == SORT_VSIZE)
+        s = "vsize";
     else if (sort == SORT_USER)
         s = "user";
     else if (sort == SORT_START)
@@ -313,6 +317,8 @@ static enum column_id get_sort_column(void) {
         return COL_CPUP;
     case SORT_MEM:
         return COL_RSS;
+    case SORT_VSIZE:
+        return COL_VSIZE;
     case SORT_USER:
         return COL_USER;
     case SORT_START:
@@ -579,6 +585,10 @@ static void set_sort(enum sort_field sort) {
         break;
     case SORT_MEM:
         compare_procs = cmp_proc_mem;
+        set_sort_descending(1);
+        break;
+    case SORT_VSIZE:
+        compare_procs = cmp_proc_vsize;
         set_sort_descending(1);
         break;
     case SORT_USER:

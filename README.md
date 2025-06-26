@@ -27,6 +27,7 @@ The `-s` option selects the sort field. Available values are:
 - `pid` &ndash; sort by process ID
 - `cpu` &ndash; sort by CPU usage
 - `mem` &ndash; sort by memory usage
+- `vsize` &ndash; sort by virtual memory size
 - `user` &ndash; sort by username
 - `start` &ndash; sort by start time
 
