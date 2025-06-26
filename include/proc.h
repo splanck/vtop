@@ -141,4 +141,8 @@ int get_show_accum_time(void);
 void set_cpu_irix_mode(int on);
 int get_cpu_irix_mode(void);
 
+/* process state filter */
+void set_state_filter(char state);
+char get_state_filter(void);
+
 #endif /* PROC_H */

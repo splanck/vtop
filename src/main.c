@@ -38,6 +38,7 @@ static void usage(const char *prog) {
     printf("  -n, --iterations N Number of refresh cycles (0=run forever)\n");
     printf("  -p, --pid   LIST   Comma-separated PIDs to monitor\n");
     printf("  -C, --command-filter STR  Show only tasks whose command contains STR\n");
+    printf("      --state STATE   Show only tasks in the given state\n");
     printf("  -u USER            Show only tasks owned by USER\n");
     printf("  -U USER            Same as -u\n");
     printf("  -m, --max   N     Maximum number of processes to display (0=all)\n");
@@ -184,6 +185,7 @@ int main(int argc, char *argv[]) {
         {"per-cpu", no_argument, NULL, '1'},
         {"accum", no_argument, NULL, 1},
         {"irix", no_argument, NULL, 3},
+        {"state", required_argument, NULL, 4},
         {"version", no_argument, NULL, 'V'},
         {"help", no_argument, NULL, 'h'},
         {NULL, 0, NULL, 0}
@@ -211,6 +213,12 @@ int main(int argc, char *argv[]) {
             return 0;
         case 3:
             set_cpu_irix_mode(1);
+            break;
+        case 4:
+            if (optarg && *optarg)
+                set_state_filter(optarg[0]);
+            else
+                set_state_filter('\0');
             break;
         case '1':
 #ifdef WITH_UI

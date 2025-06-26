@@ -39,6 +39,7 @@ static int thread_mode;
 static int show_idle = 1;
 static int show_accum_time;
 static int cpu_irix_mode;
+static char state_filter;
 
 void set_sort_descending(int desc) { sort_descending = desc != 0; }
 int get_sort_descending(void) { return sort_descending; }
@@ -54,6 +55,9 @@ int get_show_accum_time(void) { return show_accum_time; }
 
 void set_cpu_irix_mode(int on) { cpu_irix_mode = on != 0; }
 int get_cpu_irix_mode(void) { return cpu_irix_mode; }
+
+void set_state_filter(char state) { state_filter = state; }
+char get_state_filter(void) { return state_filter; }
 
 void set_name_filter(const char *substr) {
     if (substr && *substr) {
@@ -100,7 +104,7 @@ size_t get_cpu_core_count(void) { return core_count; }
 
 const struct cpu_core_stats *get_cpu_core_stats(void) { return core_stats; }
 
-static int match_filter(int pid, const char *name, const char *user) {
+static int match_filter(int pid, const char *name, const char *user, char state) {
     if (pid_list_count > 0) {
         int found = 0;
         for (size_t i = 0; i < pid_list_count; i++) {
@@ -113,6 +117,8 @@ static int match_filter(int pid, const char *name, const char *user) {
             return 0;
     }
     if (user_filter[0] && strcmp(user_filter, user) != 0)
+        return 0;
+    if (state_filter && state_filter != state)
         return 0;
     if (name_filter[0]) {
         /* simple case-insensitive substring search */
@@ -485,7 +491,7 @@ size_t list_processes(struct process_info *buf, size_t max) {
                         buf[count].cmdline[0] = '\0';
                     }
 
-                    if (!match_filter((int)pid, buf[count].name, buf[count].user)) {
+                    if (!match_filter((int)pid, buf[count].name, buf[count].user, state)) {
                         fclose(fp);
                         continue;
                     }
@@ -635,7 +641,7 @@ size_t list_processes(struct process_info *buf, size_t max) {
                     buf[count].cmdline[0] = '\0';
                 }
 
-                if (!match_filter((int)pid, buf[count].name, buf[count].user)) {
+                if (!match_filter((int)pid, buf[count].name, buf[count].user, state)) {
                     fclose(fp);
                     continue;
                 }
