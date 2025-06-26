@@ -518,7 +518,7 @@ static void field_manager(void) {
 }
 
 static void show_help(void) {
-    const int h = 40;
+    const int h = 41;
     const int w = 52;
     int startx = COLS > w ? (COLS - w) / 2 : 0;
     if (startx < 0)
@@ -542,28 +542,29 @@ static void show_help(void) {
     mvwprintw(win, 13, 2, "d/s     Set refresh delay");
     mvwprintw(win, 14, 2, "/       Filter by command name");
     mvwprintw(win, 15, 2, "u       Filter by user");
-    mvwprintw(win, 16, 2, "k       Send signal to a process");
-    mvwprintw(win, 17, 2, "r       Renice a process");
-    mvwprintw(win, 18, 2, "c       Toggle per-core view");
-    mvwprintw(win, 19, 2, "a       Toggle full command");
-    mvwprintw(win, 20, 2, "H       Toggle thread view");
-    mvwprintw(win, 21, 2, "i       Toggle idle processes");
-    mvwprintw(win, 22, 2, "V       Toggle process tree");
-    mvwprintw(win, 23, 2, "Z       Cycle color scheme");
-    mvwprintw(win, 24, 2, "x       Toggle sort highlight");
-    mvwprintw(win, 25, 2, "b       Toggle bold text");
-    mvwprintw(win, 26, 2, "S       Toggle cumulative time");
-    mvwprintw(win, 27, 2, "I       Toggle Irix mode");
-    mvwprintw(win, 28, 2, "E       Cycle memory units");
-    mvwprintw(win, 29, 2, "t       Toggle CPU summary");
-    mvwprintw(win, 30, 2, "m       Toggle memory summary");
-    mvwprintw(win, 31, 2, "f       Field manager (toggle columns)");
-    mvwprintw(win, 32, 2, "n       Set entry limit");
-    mvwprintw(win, 33, 2, "W       Save config");
-    mvwprintw(win, 34, 2, "UP/DOWN  Scroll one line");
-    mvwprintw(win, 35, 2, "PgUp/PgDn Scroll a page");
-    mvwprintw(win, 36, 2, "SPACE    Pause/resume");
-    mvwprintw(win, 37, 2, "h       Show this help");
+    mvwprintw(win, 16, 2, "g       Filter by state");
+    mvwprintw(win, 17, 2, "k       Send signal to a process");
+    mvwprintw(win, 18, 2, "r       Renice a process");
+    mvwprintw(win, 19, 2, "c       Toggle per-core view");
+    mvwprintw(win, 20, 2, "a       Toggle full command");
+    mvwprintw(win, 21, 2, "H       Toggle thread view");
+    mvwprintw(win, 22, 2, "i       Toggle idle processes");
+    mvwprintw(win, 23, 2, "V       Toggle process tree");
+    mvwprintw(win, 24, 2, "Z       Cycle color scheme");
+    mvwprintw(win, 25, 2, "x       Toggle sort highlight");
+    mvwprintw(win, 26, 2, "b       Toggle bold text");
+    mvwprintw(win, 27, 2, "S       Toggle cumulative time");
+    mvwprintw(win, 28, 2, "I       Toggle Irix mode");
+    mvwprintw(win, 29, 2, "E       Cycle memory units");
+    mvwprintw(win, 30, 2, "t       Toggle CPU summary");
+    mvwprintw(win, 31, 2, "m       Toggle memory summary");
+    mvwprintw(win, 32, 2, "f       Field manager (toggle columns)");
+    mvwprintw(win, 33, 2, "n       Set entry limit");
+    mvwprintw(win, 34, 2, "W       Save config");
+    mvwprintw(win, 35, 2, "UP/DOWN  Scroll one line");
+    mvwprintw(win, 36, 2, "PgUp/PgDn Scroll a page");
+    mvwprintw(win, 37, 2, "SPACE    Pause/resume");
+    mvwprintw(win, 38, 2, "h       Show this help");
     mvwprintw(win, h - 2, 2, "Press any key to return");
     wrefresh(win);
     nodelay(stdscr, FALSE);
@@ -907,6 +908,20 @@ int run_ui(unsigned int delay_ms, enum sort_field sort,
             mvprintw(LINES - 1, 0, "User filter: ");
             getnstr(buf, sizeof(buf) - 1);
             set_user_filter(buf[0] ? buf : NULL);
+            noecho();
+            curs_set(0);
+            nodelay(stdscr, TRUE);
+        } else if (ch == 'g') {
+            char buf[8];
+            nodelay(stdscr, FALSE);
+            echo();
+            curs_set(1);
+            mvprintw(LINES - 1, 0, "State filter: ");
+            getnstr(buf, sizeof(buf) - 1);
+            if (buf[0])
+                set_state_filter(buf[0]);
+            else
+                set_state_filter('\0');
             noecho();
             curs_set(0);
             nodelay(stdscr, TRUE);

@@ -59,6 +59,8 @@ Use `-V`/`--version` to print the vtop version and exit.
 Use `-u USER` or `-U USER` to show only processes owned by `USER`.
 Use `-C STR` or `--command-filter STR` to display only tasks whose
 command contains the given substring.
+Use `--state=R` to display only tasks in state `R` (running). Use an empty
+argument to clear the filter.
 
 ```sh
 vtop -u alice
@@ -78,6 +80,7 @@ Additional shortcuts:
 - Press `a` to toggle between the short command name and the full command line.
 - Press `H` to toggle thread view (show individual threads).
 - Press `i` to hide or show processes with zero CPU usage.
+- Press `g` to filter by process state (e.g., `R` for running).
 - Press `Z` to cycle through color schemes.
 - Press `x` to toggle highlighting of the sorted column.
 - Press `b` to toggle bold text in the process list.

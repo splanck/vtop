@@ -78,6 +78,7 @@ monitoring tools without requiring additional dependencies.
 - `-u USER`, `-U USER` &mdash; Show only processes owned by `USER`.
 - `-C STR`, `--command-filter STR` &mdash; Show only tasks whose command
   contains `STR`.
+- `--state=R` &mdash; Show only tasks in state `R`.
 
 Examples:
 
@@ -107,6 +108,7 @@ Process management shortcuts are also available:
 - `c` &ndash; toggle per-core CPU usage display.
 - `a` &ndash; toggle between the short name and full command line.
 - `S` &ndash; toggle cumulative CPU time display.
+- `g` &ndash; filter processes by state (enter a letter like `R`).
 - `I` &ndash; toggle Irix mode (CPU usage of each task not divided by CPU count).
 - `F4`/`o` &ndash; change the sort direction.
 - `x` &ndash; toggle highlighting of the sorted column.
