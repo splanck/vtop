@@ -512,7 +512,7 @@ static void field_manager(void) {
 }
 
 static void show_help(void) {
-    const int h = 36;
+    const int h = 40;
     const int w = 52;
     int startx = COLS > w ? (COLS - w) / 2 : 0;
     if (startx < 0)
@@ -554,8 +554,10 @@ static void show_help(void) {
     mvwprintw(win, 31, 2, "f       Field manager (toggle columns)");
     mvwprintw(win, 32, 2, "n       Set entry limit");
     mvwprintw(win, 33, 2, "W       Save config");
-    mvwprintw(win, 34, 2, "SPACE    Pause/resume");
-    mvwprintw(win, 35, 2, "h       Show this help");
+    mvwprintw(win, 34, 2, "UP/DOWN  Scroll one line");
+    mvwprintw(win, 35, 2, "PgUp/PgDn Scroll a page");
+    mvwprintw(win, 36, 2, "SPACE    Pause/resume");
+    mvwprintw(win, 37, 2, "h       Show this help");
     mvwprintw(win, h - 2, 2, "Press any key to return");
     wrefresh(win);
     nodelay(stdscr, FALSE);
@@ -669,6 +671,7 @@ int run_ui(unsigned int delay_ms, enum sort_field sort,
     size_t count = 0;
     int paused = 0;
     unsigned int iter = 0;
+    size_t scroll_offset = 0;
 
     set_sort(sort);
     show_threads = get_thread_mode();
@@ -810,8 +813,16 @@ int run_ui(unsigned int delay_ms, enum sort_field sort,
             row++;
         }
         draw_header(row);
-        for (size_t i = 0; i < count && i < LINES - row - 2; i++) {
-            draw_process_row(i + row + 1, &procs[i]);
+        int visible_rows = LINES - row - 2;
+        if (visible_rows < 0)
+            visible_rows = 0;
+        size_t max_offset = 0;
+        if ((size_t)visible_rows < count)
+            max_offset = count - visible_rows;
+        if (scroll_offset > max_offset)
+            scroll_offset = max_offset;
+        for (size_t i = scroll_offset; i < count && i < scroll_offset + (size_t)visible_rows; i++) {
+            draw_process_row(i - scroll_offset + row + 1, &procs[i]);
         }
         refresh();
         usleep(interval * 1000);
@@ -833,6 +844,22 @@ int run_ui(unsigned int delay_ms, enum sort_field sort,
         } else if (ch == '-') {
             if (interval > MIN_DELAY_MS)
                 interval -= 100;
+        } else if (ch == KEY_UP) {
+            if (scroll_offset > 0)
+                scroll_offset--;
+        } else if (ch == KEY_DOWN) {
+            if (scroll_offset < max_offset)
+                scroll_offset++;
+        } else if (ch == KEY_PPAGE) {
+            if (scroll_offset > (size_t)visible_rows)
+                scroll_offset -= visible_rows;
+            else
+                scroll_offset = 0;
+        } else if (ch == KEY_NPAGE) {
+            if (scroll_offset + visible_rows < count)
+                scroll_offset += visible_rows;
+            if (scroll_offset > max_offset)
+                scroll_offset = max_offset;
         } else if (ch == 'd' || ch == 's') {
             char buf[16];
             nodelay(stdscr, FALSE);
