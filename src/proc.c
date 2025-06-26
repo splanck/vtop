@@ -806,6 +806,19 @@ int cmp_proc_mem(const void *a, const void *b) {
     return res;
 }
 
+int cmp_proc_vsize(const void *a, const void *b) {
+    const struct process_info *pa = a;
+    const struct process_info *pb = b;
+    int res = 0;
+    if (pa->vsize < pb->vsize)
+        res = -1;
+    else if (pa->vsize > pb->vsize)
+        res = 1;
+    if (sort_descending)
+        res = -res;
+    return res;
+}
+
 int cmp_proc_time(const void *a, const void *b) {
     const struct process_info *pa = a;
     const struct process_info *pb = b;

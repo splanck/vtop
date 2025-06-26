@@ -66,7 +66,7 @@ monitoring tools without requiring additional dependencies.
 - `-d SECS` &mdash; Set the refresh delay in seconds. The default is
   `3` seconds just like `top`.
 - `-s COL` &mdash; Choose the column to sort by. Supported values are
-  `pid`, `cpu`, `mem`, `user` and `start`. The default is `pid`.
+  `pid`, `cpu`, `mem`, `vsize`, `user` and `start`. The default is `pid`.
 - `-S` &mdash; Enable secure mode which disables signaling and renicing
   processes.
 - `--accum` &mdash; Include child CPU time when displaying `TIME`.
