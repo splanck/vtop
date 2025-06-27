@@ -514,6 +514,21 @@ size_t list_processes(struct process_info *buf, size_t max) {
                     buf[count].shared = shared_kb;
                     buf[count].rss_percent = 100.0 * (double)rss_kb /
                                            (double)ms.total;
+                    unsigned long long rb = 0, wb = 0;
+                    snprintf(path, sizeof(path), "/proc/%ld/task/%ld/io", pid, tid);
+                    FILE *fio = fopen(path, "r");
+                    if (fio) {
+                        char lineio[256];
+                        while (fgets(lineio, sizeof(lineio), fio)) {
+                            if (sscanf(lineio, "read_bytes: %llu", &rb) == 1)
+                                continue;
+                            if (sscanf(lineio, "write_bytes: %llu", &wb) == 1)
+                                continue;
+                        }
+                        fclose(fio);
+                    }
+                    buf[count].read_bytes = rb;
+                    buf[count].write_bytes = wb;
                     buf[count].utime = utime;
                     buf[count].stime = stime;
                     buf[count].cpu_usage = usage;
@@ -664,6 +679,21 @@ size_t list_processes(struct process_info *buf, size_t max) {
                 buf[count].shared = shared_kb;
                 buf[count].rss_percent = 100.0 * (double)rss_kb /
                                        (double)ms.total;
+                unsigned long long rb = 0, wb = 0;
+                snprintf(path, sizeof(path), "/proc/%ld/io", pid);
+                FILE *fio = fopen(path, "r");
+                if (fio) {
+                    char lineio[256];
+                    while (fgets(lineio, sizeof(lineio), fio)) {
+                        if (sscanf(lineio, "read_bytes: %llu", &rb) == 1)
+                            continue;
+                        if (sscanf(lineio, "write_bytes: %llu", &wb) == 1)
+                            continue;
+                    }
+                    fclose(fio);
+                }
+                buf[count].read_bytes = rb;
+                buf[count].write_bytes = wb;
                 buf[count].utime = utime;
                 buf[count].stime = stime;
                 buf[count].cpu_usage = usage;

@@ -65,6 +65,8 @@ enum column_id {
     COL_CPUP,
     COL_TIME,
     COL_START,
+    COL_READ,
+    COL_WRITE,
     COL_COUNT
 };
 
@@ -94,7 +96,9 @@ static struct column_def columns[COL_COUNT] = {
     {COL_CPU,   "CPU",     3, 0, 1,11},
     {COL_CPUP,  "CPU%",    6, 0, 1,12},
     {COL_TIME,  "TIME",    8, 0, 1,13},
-    {COL_START, "START",   8, 1, 1,14}
+    {COL_START, "START",   8, 1, 1,14},
+    {COL_READ,  "READ",    8, 0, 0,15},
+    {COL_WRITE, "WRITE",   8, 0, 0,16}
 };
 
 void ui_list_fields(void) {
@@ -446,6 +450,18 @@ static void draw_process_row(int row, const struct process_info *p) {
             mvprintw(row, x, columns[i].left ? "%-*s" : "%*s",
                      columns[i].width, p->start_time);
             break;
+        case COL_READ: {
+            double rb = scale_kb(p->read_bytes / 1024ULL, proc_unit);
+            mvprintw(row, x, columns[i].left ? "%-*.1f" : "%*.1f",
+                     columns[i].width, rb);
+            break;
+        }
+        case COL_WRITE: {
+            double wb = scale_kb(p->write_bytes / 1024ULL, proc_unit);
+            mvprintw(row, x, columns[i].left ? "%-*.1f" : "%*.1f",
+                     columns[i].width, wb);
+            break;
+        }
         default:
             break;
         }
@@ -518,7 +534,7 @@ static void field_manager(void) {
 }
 
 static void show_help(void) {
-    const int h = 41;
+    const int h = 42;
     const int w = 52;
     int startx = COLS > w ? (COLS - w) / 2 : 0;
     if (startx < 0)
@@ -561,10 +577,11 @@ static void show_help(void) {
     mvwprintw(win, 32, 2, "f       Field manager (toggle columns)");
     mvwprintw(win, 33, 2, "n       Set entry limit");
     mvwprintw(win, 34, 2, "W       Save config");
-    mvwprintw(win, 35, 2, "UP/DOWN  Scroll one line");
-    mvwprintw(win, 36, 2, "PgUp/PgDn Scroll a page");
-    mvwprintw(win, 37, 2, "SPACE    Pause/resume");
-    mvwprintw(win, 38, 2, "h       Show this help");
+    mvwprintw(win, 35, 2, "READ/WRITE columns show disk I/O");
+    mvwprintw(win, 36, 2, "UP/DOWN  Scroll one line");
+    mvwprintw(win, 37, 2, "PgUp/PgDn Scroll a page");
+    mvwprintw(win, 38, 2, "SPACE    Pause/resume");
+    mvwprintw(win, 39, 2, "h       Show this help");
     mvwprintw(win, h - 2, 2, "Press any key to return");
     wrefresh(win);
     nodelay(stdscr, FALSE);

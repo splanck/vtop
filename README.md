@@ -96,7 +96,7 @@ Additional shortcuts:
 - Press `h` to open a small help window with available shortcuts.
 - Press `W` to save the current configuration.
 - Press `f` to open the field manager. Use `space` to toggle visibility,
-including the CPU and SHR columns, and `h`/`l` to move the selected column left or right.
+including the CPU, SHR, READ and WRITE columns, and `h`/`l` to move the selected column left or right.
 
 These controls operate on live processes. Ensure you have permission to
 signal or renice the target process. Running as root can terminate or slow
@@ -115,8 +115,8 @@ Example output with the ncurses interface:
 
 The table shows PID, CPU, USER, process name, state, priority,
 nice value, virtual memory size, resident set size, shared
-memory size, memory usage percentage, CPU usage, total CPU time
-and the process start time.
+memory size, memory usage percentage, CPU usage, total CPU time,
+bytes read from and written to storage and the process start time.
 The header above the table displays the system load averages,
 uptime and a full task state summary in the form
 `tasks <total> total, <running> running, <sleeping> sleeping,
