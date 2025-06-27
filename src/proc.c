@@ -37,6 +37,7 @@ static int sort_descending;
 /* show threads instead of processes */
 static int thread_mode;
 static int show_idle = 1;
+static int hide_kthreads;
 static int show_accum_time;
 static int cpu_irix_mode;
 static char state_filter;
@@ -49,6 +50,9 @@ int get_thread_mode(void) { return thread_mode; }
 
 void set_show_idle(int on) { show_idle = on != 0; }
 int get_show_idle(void) { return show_idle; }
+
+void set_hide_kthreads(int on) { hide_kthreads = on != 0; }
+int get_hide_kthreads(void) { return hide_kthreads; }
 
 void set_show_accum_time(int on) { show_accum_time = on != 0; }
 int get_show_accum_time(void) { return show_accum_time; }
@@ -105,6 +109,8 @@ size_t get_cpu_core_count(void) { return core_count; }
 const struct cpu_core_stats *get_cpu_core_stats(void) { return core_stats; }
 
 static int match_filter(int pid, const char *name, const char *user, char state) {
+    if (hide_kthreads && name && name[0] == '[')
+        return 0;
     if (pid_list_count > 0) {
         int found = 0;
         for (size_t i = 0; i < pid_list_count; i++) {

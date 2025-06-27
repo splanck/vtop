@@ -51,6 +51,7 @@ The `--list-fields` option prints all available column names and exits.
 The `-a`/`--cmdline` flag shows the full command line instead of the short
 command name.
 Use `-i`/`--hide-idle` to start with idle processes hidden.
+Use `--hide-kthreads` to hide kernel threads whose names begin with `[`.
 Use `-H`/`--threads` to show individual threads instead of processes.
 Use `--irix` to display CPU usage relative to a single CPU.
 Use `--per-cpu` to show per-core CPU usage by default.
@@ -79,6 +80,7 @@ Additional shortcuts:
 - Press `c` to toggle per-core CPU usage display.
 - Press `a` to toggle between the short command name and the full command line.
 - Press `H` to toggle thread view (show individual threads).
+- Press `K` to hide or show kernel threads.
 - Press `i` to hide or show processes with zero CPU usage.
 - Press `g` to filter by process state (e.g., `R` for running).
 - Press `Z` to cycle through color schemes.
