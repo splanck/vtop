@@ -137,6 +137,10 @@ int get_thread_mode(void);
 void set_show_idle(int on);
 int get_show_idle(void);
 
+/* hide kernel threads */
+void set_hide_kthreads(int on);
+int get_hide_kthreads(void);
+
 /* accumulate child CPU time in cpu_time */
 void set_show_accum_time(int on);
 int get_show_accum_time(void);

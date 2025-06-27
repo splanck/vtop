@@ -74,6 +74,7 @@ monitoring tools without requiring additional dependencies.
 - `-a`/`--cmdline` &mdash; Show the full command line instead of just the
   process name.
 - `-i`/`--hide-idle` &mdash; Do not list tasks with zero CPU usage.
+- `--hide-kthreads` &mdash; Hide kernel threads (commands starting with `[`).
 - `--irix` &mdash; Display per-process CPU usage relative to one CPU.
 - `-u USER`, `-U USER` &mdash; Show only processes owned by `USER`.
 - `-C STR`, `--command-filter STR` &mdash; Show only tasks whose command
@@ -107,6 +108,7 @@ Process management shortcuts are also available:
 - `r` &ndash; prompt for a PID and new nice value to adjust process priority.
 - `c` &ndash; toggle per-core CPU usage display.
 - `a` &ndash; toggle between the short name and full command line.
+- `K` &ndash; toggle display of kernel threads.
 - `S` &ndash; toggle cumulative CPU time display.
 - `g` &ndash; filter processes by state (enter a letter like `R`).
 - `I` &ndash; toggle Irix mode (CPU usage of each task not divided by CPU count).

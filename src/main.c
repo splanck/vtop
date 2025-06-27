@@ -45,6 +45,7 @@ static void usage(const char *prog) {
     printf("  -w, --width COLS  Override screen width in columns\n");
     printf("  -a, --cmdline     Display the full command line by default\n");
     printf("  -i, --hide-idle   Hide processes with zero CPU usage\n");
+    printf("      --hide-kthreads Hide kernel threads\n");
     printf("  -H, --threads     Show individual threads instead of processes\n");
     printf("      --irix        Do not scale CPU%% by number of CPUs\n");
     printf("      --per-cpu     Show per-core CPU usage\n");
@@ -178,6 +179,7 @@ int main(int argc, char *argv[]) {
         {"width", required_argument, NULL, 'w'},
         {"cmdline", no_argument, NULL, 'a'},
         {"hide-idle", no_argument, NULL, 'i'},
+        {"hide-kthreads", no_argument, NULL, 5},
         {"threads", no_argument, NULL, 'H'},
 #ifdef WITH_UI
         {"list-fields", no_argument, NULL, 2},
@@ -219,6 +221,12 @@ int main(int argc, char *argv[]) {
                 set_state_filter(optarg[0]);
             else
                 set_state_filter('\0');
+            break;
+        case 5:
+            set_hide_kthreads(1);
+#ifdef WITH_UI
+            ui_set_hide_kthreads(1);
+#endif
             break;
         case '1':
 #ifdef WITH_UI

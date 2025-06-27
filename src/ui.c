@@ -24,6 +24,7 @@ static int show_cores;
 static int show_full_cmd;
 static int show_threads;
 static int show_idle = 1;
+static int hide_kthreads;
 struct color_scheme {
     short sort;
     short running;
@@ -137,6 +138,8 @@ void ui_set_show_idle(int on) { show_idle = on != 0; }
 
 void ui_set_show_cores(int on) { show_cores = on != 0; }
 
+void ui_set_hide_kthreads(int on) { hide_kthreads = on != 0; }
+
 static void apply_color_scheme(void) {
     if (!has_colors())
         return;
@@ -194,6 +197,8 @@ int ui_load_config(unsigned int *delay_ms, enum sort_field *sort) {
             show_threads = atoi(val);
         } else if (strcmp(key, "show_idle") == 0) {
             show_idle = atoi(val);
+        } else if (strcmp(key, "hide_kthreads") == 0) {
+            hide_kthreads = atoi(val);
         } else if (strcmp(key, "show_forest") == 0) {
             show_forest = atoi(val);
         } else if (strcmp(key, "show_cpu_summary") == 0) {
@@ -268,6 +273,7 @@ int ui_save_config(unsigned int delay_ms, enum sort_field sort) {
     fprintf(fp, "show_full_cmd=%d\n", show_full_cmd);
     fprintf(fp, "show_threads=%d\n", show_threads);
     fprintf(fp, "show_idle=%d\n", show_idle);
+    fprintf(fp, "hide_kthreads=%d\n", hide_kthreads);
     fprintf(fp, "show_forest=%d\n", show_forest);
     fprintf(fp, "show_cpu_summary=%d\n", show_cpu_summary);
     fprintf(fp, "show_mem_summary=%d\n", show_mem_summary);
@@ -564,24 +570,25 @@ static void show_help(void) {
     mvwprintw(win, 19, 2, "c       Toggle per-core view");
     mvwprintw(win, 20, 2, "a       Toggle full command");
     mvwprintw(win, 21, 2, "H       Toggle thread view");
-    mvwprintw(win, 22, 2, "i       Toggle idle processes");
-    mvwprintw(win, 23, 2, "V       Toggle process tree");
-    mvwprintw(win, 24, 2, "Z       Cycle color scheme");
-    mvwprintw(win, 25, 2, "x       Toggle sort highlight");
-    mvwprintw(win, 26, 2, "b       Toggle bold text");
-    mvwprintw(win, 27, 2, "S       Toggle cumulative time");
-    mvwprintw(win, 28, 2, "I       Toggle Irix mode");
-    mvwprintw(win, 29, 2, "E       Cycle memory units");
-    mvwprintw(win, 30, 2, "t       Toggle CPU summary");
-    mvwprintw(win, 31, 2, "m       Toggle memory summary");
-    mvwprintw(win, 32, 2, "f       Field manager (toggle columns)");
-    mvwprintw(win, 33, 2, "n       Set entry limit");
-    mvwprintw(win, 34, 2, "W       Save config");
-    mvwprintw(win, 35, 2, "READ/WRITE columns show disk I/O");
-    mvwprintw(win, 36, 2, "UP/DOWN  Scroll one line");
-    mvwprintw(win, 37, 2, "PgUp/PgDn Scroll a page");
-    mvwprintw(win, 38, 2, "SPACE    Pause/resume");
-    mvwprintw(win, 39, 2, "h       Show this help");
+    mvwprintw(win, 22, 2, "K       Toggle kernel threads");
+    mvwprintw(win, 23, 2, "i       Toggle idle processes");
+    mvwprintw(win, 24, 2, "V       Toggle process tree");
+    mvwprintw(win, 25, 2, "Z       Cycle color scheme");
+    mvwprintw(win, 26, 2, "x       Toggle sort highlight");
+    mvwprintw(win, 27, 2, "b       Toggle bold text");
+    mvwprintw(win, 28, 2, "S       Toggle cumulative time");
+    mvwprintw(win, 29, 2, "I       Toggle Irix mode");
+    mvwprintw(win, 30, 2, "E       Cycle memory units");
+    mvwprintw(win, 31, 2, "t       Toggle CPU summary");
+    mvwprintw(win, 32, 2, "m       Toggle memory summary");
+    mvwprintw(win, 33, 2, "f       Field manager (toggle columns)");
+    mvwprintw(win, 34, 2, "n       Set entry limit");
+    mvwprintw(win, 35, 2, "W       Save config");
+    mvwprintw(win, 36, 2, "READ/WRITE columns show disk I/O");
+    mvwprintw(win, 37, 2, "UP/DOWN  Scroll one line");
+    mvwprintw(win, 38, 2, "PgUp/PgDn Scroll a page");
+    mvwprintw(win, 39, 2, "SPACE    Pause/resume");
+    mvwprintw(win, 40, 2, "h       Show this help");
     mvwprintw(win, h - 2, 2, "Press any key to return");
     wrefresh(win);
     nodelay(stdscr, FALSE);
@@ -705,6 +712,7 @@ int run_ui(unsigned int delay_ms, enum sort_field sort,
     show_threads = get_thread_mode();
     set_thread_mode(show_threads);
     set_show_idle(show_idle);
+    set_hide_kthreads(hide_kthreads);
     unsigned int interval = delay_ms;
     if (interval < MIN_DELAY_MS)
         interval = MIN_DELAY_MS;
@@ -995,6 +1003,9 @@ int run_ui(unsigned int delay_ms, enum sort_field sort,
         } else if (ch == 'H') {
             show_threads = !show_threads;
             set_thread_mode(show_threads);
+        } else if (ch == 'K') {
+            hide_kthreads = !hide_kthreads;
+            set_hide_kthreads(hide_kthreads);
         } else if (ch == 'i') {
             show_idle = !show_idle;
             set_show_idle(show_idle);
