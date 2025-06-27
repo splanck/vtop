@@ -85,6 +85,10 @@ struct process_info {
     double cpu_usage;
     /* Total CPU time in seconds */
     double cpu_time;
+    /* Bytes read from storage */
+    unsigned long long read_bytes;
+    /* Bytes written to storage */
+    unsigned long long write_bytes;
     /* Process start time as seconds since the epoch */
     double start_timestamp;
     /* Process start time as HH:MM:SS */
